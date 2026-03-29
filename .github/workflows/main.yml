@@ -63,13 +63,33 @@ jobs:
           STANDBY_RICHARD_TOKEN: ${{ secrets.STANDBY_RICHARD_TOKEN }}
           STANDBY_NATUREMOVE_SID: ${{ secrets.STANDBY_NATUREMOVE_SID }}
           STANDBY_NATUREMOVE_TOKEN: ${{ secrets.STANDBY_NATUREMOVE_TOKEN }}
-          DELIVERY_JANELA_HORAS: "0.25"
+          DELIVERY_JANELA_HORAS: ${{ secrets.DELIVERY_JANELA_HORAS }}
         run: python delivery_extractor.py
+
+      - name: 💰 Executar extrator de Saldos
+        env:
+          RECUPERACAO_NS_SID: ${{ secrets.RECUPERACAO_NS_SID }}
+          RECUPERACAO_NS_TOKEN: ${{ secrets.RECUPERACAO_NS_TOKEN }}
+          BROADCAST_JOAO_SID: ${{ secrets.BROADCAST_JOAO_SID }}
+          BROADCAST_JOAO_TOKEN: ${{ secrets.BROADCAST_JOAO_TOKEN }}
+          BROADCAST_BERNARDO_SID: ${{ secrets.BROADCAST_BERNARDO_SID }}
+          BROADCAST_BERNARDO_TOKEN: ${{ secrets.BROADCAST_BERNARDO_TOKEN }}
+          BROADCAST_RAFA_SID: ${{ secrets.BROADCAST_RAFA_SID }}
+          BROADCAST_RAFA_TOKEN: ${{ secrets.BROADCAST_RAFA_TOKEN }}
+          STANDBY_HAVEN_SID: ${{ secrets.STANDBY_HAVEN_SID }}
+          STANDBY_HAVEN_TOKEN: ${{ secrets.STANDBY_HAVEN_TOKEN }}
+          STANDBY_REHABLEAF_SID: ${{ secrets.STANDBY_REHABLEAF_SID }}
+          STANDBY_REHABLEAF_TOKEN: ${{ secrets.STANDBY_REHABLEAF_TOKEN }}
+          STANDBY_RICHARD_SID: ${{ secrets.STANDBY_RICHARD_SID }}
+          STANDBY_RICHARD_TOKEN: ${{ secrets.STANDBY_RICHARD_TOKEN }}
+          STANDBY_NATUREMOVE_SID: ${{ secrets.STANDBY_NATUREMOVE_SID }}
+          STANDBY_NATUREMOVE_TOKEN: ${{ secrets.STANDBY_NATUREMOVE_TOKEN }}
+        run: python saldo_extractor.py
 
       - name: 💾 Commitar todos os CSVs atualizados
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add conf_total_marco.csv conf_detalhado_marco.csv conf_delivery_stats.csv conf_delivery_horario.csv
+          git add conf_total_marco.csv conf_detalhado_marco.csv conf_delivery_stats.csv conf_delivery_horario.csv conf_saldos.csv
           git diff --staged --quiet || git commit -m "chore: atualiza CSVs Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push
