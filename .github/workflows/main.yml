@@ -1,4 +1,4 @@
-name: Extração Twilio - A cada 15 minutos
+name: Extração Twilio - A cada 5 minutos
 
 on:
   schedule:
@@ -119,6 +119,10 @@ jobs:
     needs: [financeiro, delivery, saldos]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Importante: Faz o checkout da branch correta
+          ref: main
+      
       - uses: actions/download-artifact@v4
         with:
           name: csv-financeiro
@@ -128,26 +132,20 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: csv-saldos
+
       - name: 💾 Commitar todos os CSVs
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          # Copia os CSVs novos para fora do repo
-          cp conf_total_marco.csv /tmp/conf_total_marco.csv
-          cp conf_detalhado_marco.csv /tmp/conf_detalhado_marco.csv
-          cp conf_delivery_stats.csv /tmp/conf_delivery_stats.csv
-          cp conf_delivery_horario.csv /tmp/conf_delivery_horario.csv
-          cp conf_saldos.csv /tmp/conf_saldos.csv
-          # Sincroniza com o remoto
-          git fetch origin master
-          git reset --hard origin/master
-          # Restaura os CSVs novos por cima
-          cp /tmp/conf_total_marco.csv conf_total_marco.csv
-          cp /tmp/conf_detalhado_marco.csv conf_detalhado_marco.csv
-          cp /tmp/conf_delivery_stats.csv conf_delivery_stats.csv
-          cp /tmp/conf_delivery_horario.csv conf_delivery_horario.csv
-          cp /tmp/conf_saldos.csv conf_saldos.csv
-          # Commita e faz push
+          
+          # Adiciona os arquivos CSV que foram baixados dos artifacts
           git add conf_total_marco.csv conf_detalhado_marco.csv conf_delivery_stats.csv conf_delivery_horario.csv conf_saldos.csv
+          
+          # Puxa mudanças remotas para evitar conflitos (importante para cron de 5min)
+          git pull origin main --rebase
+          
+          # Commita apenas se houver mudanças reais para não sujar o histórico à toa
           git diff --staged --quiet || git commit -m "chore: atualiza CSVs Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
-          git push origin master
+          
+          # Faz o push para a branch correta (main)
+          git push origin main
