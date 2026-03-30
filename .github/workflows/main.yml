@@ -135,4 +135,4 @@ jobs:
           git pull --rebase origin master
           git add conf_total_marco.csv conf_detalhado_marco.csv conf_delivery_stats.csv conf_delivery_horario.csv conf_saldos.csv
           git diff --staged --quiet || git commit -m "chore: atualiza CSVs Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
-          git push origin master
+          git push --force-with-lease origin master
