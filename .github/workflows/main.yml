@@ -9,23 +9,17 @@ permissions:
   contents: write
 
 jobs:
-  extrair-dados:
+
+  financeiro:
     runs-on: ubuntu-latest
-
     steps:
-      - name: 📥 Checkout do repositório
-        uses: actions/checkout@v4
-
-      - name: 🐍 Configurar Python 3.11
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
-
-      - name: 📦 Instalar dependências
-        run: pip install -r requirements.txt
-
-      - name: 🚀 Executar extrator financeiro
+      - run: pip install -r requirements.txt
+      - name: 🚀 Extrator Financeiro
         env:
           RECUPERACAO_NS_SID: ${{ secrets.RECUPERACAO_NS_SID }}
           RECUPERACAO_NS_TOKEN: ${{ secrets.RECUPERACAO_NS_TOKEN }}
@@ -44,8 +38,23 @@ jobs:
           STANDBY_NATUREMOVE_SID: ${{ secrets.STANDBY_NATUREMOVE_SID }}
           STANDBY_NATUREMOVE_TOKEN: ${{ secrets.STANDBY_NATUREMOVE_TOKEN }}
         run: python extratorv2.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csv-financeiro
+          path: |
+            conf_total_marco.csv
+            conf_detalhado_marco.csv
 
-      - name: 📡 Executar extrator Delivery & Errors
+  delivery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - run: pip install -r requirements.txt
+      - name: 📡 Extrator Delivery & Errors
         env:
           RECUPERACAO_NS_SID: ${{ secrets.RECUPERACAO_NS_SID }}
           RECUPERACAO_NS_TOKEN: ${{ secrets.RECUPERACAO_NS_TOKEN }}
@@ -65,8 +74,23 @@ jobs:
           STANDBY_NATUREMOVE_TOKEN: ${{ secrets.STANDBY_NATUREMOVE_TOKEN }}
           DELIVERY_JANELA_HORAS: ${{ secrets.DELIVERY_JANELA_HORAS }}
         run: python delivery_extractor.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csv-delivery
+          path: |
+            conf_delivery_stats.csv
+            conf_delivery_horario.csv
 
-      - name: 💰 Executar extrator de Saldos
+  saldos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - run: pip install -r requirements.txt
+      - name: 💰 Extrator de Saldos
         env:
           RECUPERACAO_NS_SID: ${{ secrets.RECUPERACAO_NS_SID }}
           RECUPERACAO_NS_TOKEN: ${{ secrets.RECUPERACAO_NS_TOKEN }}
@@ -85,8 +109,26 @@ jobs:
           STANDBY_NATUREMOVE_SID: ${{ secrets.STANDBY_NATUREMOVE_SID }}
           STANDBY_NATUREMOVE_TOKEN: ${{ secrets.STANDBY_NATUREMOVE_TOKEN }}
         run: python saldo_extractor.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csv-saldos
+          path: conf_saldos.csv
 
-      - name: 💾 Commitar todos os CSVs atualizados
+  commitar:
+    runs-on: ubuntu-latest
+    needs: [financeiro, delivery, saldos]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: csv-financeiro
+      - uses: actions/download-artifact@v4
+        with:
+          name: csv-delivery
+      - uses: actions/download-artifact@v4
+        with:
+          name: csv-saldos
+      - name: 💾 Commitar todos os CSVs
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
