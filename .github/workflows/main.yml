@@ -132,6 +132,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+          git pull --rebase origin master
           git add conf_total_marco.csv conf_detalhado_marco.csv conf_delivery_stats.csv conf_delivery_horario.csv conf_saldos.csv
           git diff --staged --quiet || git commit -m "chore: atualiza CSVs Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
-          git push
+          git push origin master
