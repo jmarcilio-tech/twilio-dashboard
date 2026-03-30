@@ -28,31 +28,49 @@ accounts = [
     {"sid": os.getenv("STANDBY_NATUREMOVE_SID"),    "token": os.getenv("STANDBY_NATUREMOVE_TOKEN"),    "nome": "Naturemove", "categoria": "Standby"},
 ]
 
+_debug_printed = False
+
 def slot_15min(dt_str):
     """Converte data da Twilio para slot de 15min. Suporta múltiplos formatos."""
+    global _debug_printed
     if not dt_str:
         return None
-    # Formatos possíveis da Twilio
+
+    # Debug: mostra o formato real na primeira mensagem
+    if not _debug_printed:
+        print(f"🔍 DEBUG formato de data Twilio: '{dt_str}'")
+        _debug_printed = True
+
+    # Formato RFC 2822 que a Twilio usa: "Sun, 29 Mar 2026 23:03:00 +0000"
+    try:
+        from email.utils import parsedate_to_datetime
+        dt = parsedate_to_datetime(dt_str)
+        minuto_slot = (dt.minute // 15) * 15
+        return dt.strftime(f'%Y-%m-%d %H:{minuto_slot:02d}')
+    except:
+        pass
+
+    # Fallbacks
     formatos = [
-        '%Y-%m-%dT%H:%M:%SZ',        # 2026-03-29T17:00:00Z
-        '%Y-%m-%dT%H:%M:%S',          # 2026-03-29T17:00:00
-        '%a, %d %b %Y %H:%M:%S %z',  # Mon, 29 Mar 2026 17:00:00 +0000
-        '%a, %d %b %Y %H:%M:%S GMT', # Mon, 29 Mar 2026 17:00:00 GMT
+        '%Y-%m-%dT%H:%M:%SZ',
+        '%Y-%m-%dT%H:%M:%S',
+        '%a, %d %b %Y %H:%M:%S %z',
+        '%a, %d %b %Y %H:%M:%S GMT',
     ]
     for fmt in formatos:
         try:
-            dt = datetime.strptime(dt_str[:len(fmt)+5].strip(), fmt)
+            dt = datetime.strptime(dt_str.strip(), fmt)
             minuto_slot = (dt.minute // 15) * 15
             return dt.strftime(f'%Y-%m-%d %H:{minuto_slot:02d}')
         except:
             continue
-    # Tenta extrair direto dos primeiros 16 chars como fallback
     try:
         dt = datetime.strptime(dt_str[:16], '%Y-%m-%dT%H:%M')
         minuto_slot = (dt.minute // 15) * 15
         return dt.strftime(f'%Y-%m-%d %H:{minuto_slot:02d}')
     except:
-        return None  # Retorna None em vez de "desconhecido" para ignorar a linha
+        print(f"⚠️  Não conseguiu parsear: '{dt_str}'")
+        return None
 
 def carregar_chaves_existentes(filepath, key_cols):
     chaves = set()
