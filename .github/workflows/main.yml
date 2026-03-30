@@ -120,9 +120,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Importante: Faz o checkout da branch correta
           ref: main
-      
+          fetch-depth: 0 # Essencial para evitar o erro 128 no rebase
+
       - uses: actions/download-artifact@v4
         with:
           name: csv-financeiro
@@ -133,19 +133,21 @@ jobs:
         with:
           name: csv-saldos
 
-      - name: 💾 Commitar todos os CSVs
+      - name: 💾 Sincronizar e Commitar
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
-          # Adiciona os arquivos CSV que foram baixados dos artifacts
-          git add conf_total_marco.csv conf_detalhado_marco.csv conf_delivery_stats.csv conf_delivery_horario.csv conf_saldos.csv
-          
-          # Puxa mudanças remotas para evitar conflitos (importante para cron de 5min)
+          # 1. Puxa as novidades ANTES de adicionar os arquivos (Evita erro 128)
           git pull origin main --rebase
           
-          # Commita apenas se houver mudanças reais para não sujar o histórico à toa
-          git diff --staged --quiet || git commit -m "chore: atualiza CSVs Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          # 2. Adiciona os novos dados
+          git add *.csv
           
-          # Faz o push para a branch correta (main)
-          git push origin main
+          # 3. Commita apenas se houver mudanças reais
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: atualiza CSVs Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+            git push origin main
+          else
+            echo "Nenhuma mudança detectada nos CSVs."
+          fi
