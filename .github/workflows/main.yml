@@ -2,7 +2,7 @@ name: Extração Twilio - A cada 15 minutos
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
