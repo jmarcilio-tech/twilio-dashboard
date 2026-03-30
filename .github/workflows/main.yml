@@ -121,33 +121,36 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
-          fetch-depth: 0 # Essencial para evitar o erro 128 no rebase
+          fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
+      - name: 📁 Baixar e Preparar Arquivos
+        uses: actions/download-artifact@v4
         with:
-          name: csv-financeiro
-      - uses: actions/download-artifact@v4
-        with:
-          name: csv-delivery
-      - uses: actions/download-artifact@v4
-        with:
-          name: csv-saldos
+          path: temp_artifacts # Baixa tudo para uma pasta fora do fluxo do Git por enquanto
 
       - name: 💾 Sincronizar e Commitar
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
-          # 1. Puxa as novidades ANTES de adicionar os arquivos (Evita erro 128)
+          # 1. Garante que o Git está limpo e atualizado com o servidor
+          git reset --hard HEAD
           git pull origin main --rebase
           
-          # 2. Adiciona os novos dados
-          git add *.csv
+          # 2. Move os arquivos da pasta temporária para a raiz do projeto
+          # O download-artifact v4 cria subpastas com os nomes dos artifacts
+          cp -rf temp_artifacts/csv-financeiro/* . || true
+          cp -rf temp_artifacts/csv-delivery/* . || true
+          cp -rf temp_artifacts/csv-saldos/* . || true
           
-          # 3. Commita apenas se houver mudanças reais
+          # 3. Remove a pasta temporária para não sujar o commit
+          rm -rf temp_artifacts
+          
+          # 4. Adiciona, commita e envia
+          git add *.csv
           if ! git diff --staged --quiet; then
             git commit -m "chore: atualiza CSVs Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
             git push origin main
           else
-            echo "Nenhuma mudança detectada nos CSVs."
+            echo "Nenhuma mudança real nos dados."
           fi
