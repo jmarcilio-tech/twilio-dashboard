@@ -9,7 +9,6 @@ permissions:
   contents: write
 
 jobs:
-
   financeiro:
     runs-on: ubuntu-latest
     steps:
@@ -119,20 +118,28 @@ jobs:
     needs: [financeiro, delivery, saldos]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
         with:
-          name: csv-financeiro
-      - uses: actions/download-artifact@v4
+          fetch-depth: 0 # Necessário para pull/push correto
+
+      - name: Baixar todos os artefatos
+        uses: actions/download-artifact@v4
         with:
-          name: csv-delivery
-      - uses: actions/download-artifact@v4
-        with:
-          name: csv-saldos
+          merge-multiple: true # Coloca todos os CSVs na raiz
+
       - name: 💾 Commitar todos os CSVs
         run: |
+          # Configura identidade
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git pull --rebase origin master
-          git add conf_total_marco.csv conf_detalhado_marco.csv conf_delivery_stats.csv conf_delivery_horario.csv conf_saldos.csv
+          
+          # 1. Adiciona os arquivos PRIMEIRO para limpar o estado "unstaged"
+          git add *.csv
+          
+          # 2. Cria o commit local (apenas se houver mudanças reais)
           git diff --staged --quiet || git commit -m "chore: atualiza CSVs Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
-          git push --force-with-lease origin master
+          
+          # 3. Pull com rebase para sincronizar com o servidor sem criar loops de merge
+          git pull --rebase origin master
+          
+          # 4. Push final
+          git push origin master
