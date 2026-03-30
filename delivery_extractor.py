@@ -146,26 +146,22 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
 resultados = [r for r in resultados if r is not None and r["stats"]["Total"] > 0]
 EXTRAIDO_EM = AGORA.strftime('%Y-%m-%d %H:%M UTC')
 
-# --- Acumular conf_delivery_stats.csv ---
-# Chave: Conta + Extraido_Em (evita duplicar a mesma execução)
-chaves_stats = carregar_chaves_existentes(csv_stats, key_cols=[0, 9])
-novas_stats = []
+# --- Sobrescrever conf_delivery_stats.csv (snapshot atual) ---
+# Sempre recria do zero com a foto mais recente de cada conta
+rows_stats = []
 for r in resultados:
-    if (r["nome"], EXTRAIDO_EM) not in chaves_stats:
-        novas_stats.append([
-            r["nome"], r["cat"], JANELA_LABEL,
-            r["stats"]["Total"], r["stats"]["Delivered"],
-            r["stats"]["Failed"], r["stats"]["Undelivered"],
-            r["stats"]["Unknown"], r["taxa"], EXTRAIDO_EM
-        ])
+    rows_stats.append([
+        r["nome"], r["cat"], JANELA_LABEL,
+        r["stats"]["Total"], r["stats"]["Delivered"],
+        r["stats"]["Failed"], r["stats"]["Undelivered"],
+        r["stats"]["Unknown"], r["taxa"], EXTRAIDO_EM
+    ])
 
-escrever_header = not os.path.exists(csv_stats)
-with open(csv_stats, "a", newline="", encoding="utf-8") as f:
+with open(csv_stats, "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f)
-    if escrever_header:
-        w.writerow(["Conta", "Categoria", "Janela", "Total", "Delivered", "Failed", "Undelivered", "Unknown", "Taxa_Entrega_%", "Extraido_Em"])
-    w.writerows(novas_stats)
-print(f"📄 {csv_stats} — {len(novas_stats)} linha(s) novas adicionadas")
+    w.writerow(["Conta", "Categoria", "Janela", "Total", "Delivered", "Failed", "Undelivered", "Unknown", "Taxa_Entrega_%", "Extraido_Em"])
+    w.writerows(rows_stats)
+print(f"📄 {csv_stats} — sobrescrito com {len(rows_stats)} conta(s) | snapshot de {EXTRAIDO_EM}")
 
 # --- Acumular conf_delivery_horario.csv ---
 # Chave: Slot_15min + Conta (evita duplicar o mesmo slot)
