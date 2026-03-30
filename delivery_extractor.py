@@ -29,12 +29,30 @@ accounts = [
 ]
 
 def slot_15min(dt_str):
+    """Converte data da Twilio para slot de 15min. Suporta múltiplos formatos."""
+    if not dt_str:
+        return None
+    # Formatos possíveis da Twilio
+    formatos = [
+        '%Y-%m-%dT%H:%M:%SZ',        # 2026-03-29T17:00:00Z
+        '%Y-%m-%dT%H:%M:%S',          # 2026-03-29T17:00:00
+        '%a, %d %b %Y %H:%M:%S %z',  # Mon, 29 Mar 2026 17:00:00 +0000
+        '%a, %d %b %Y %H:%M:%S GMT', # Mon, 29 Mar 2026 17:00:00 GMT
+    ]
+    for fmt in formatos:
+        try:
+            dt = datetime.strptime(dt_str[:len(fmt)+5].strip(), fmt)
+            minuto_slot = (dt.minute // 15) * 15
+            return dt.strftime(f'%Y-%m-%d %H:{minuto_slot:02d}')
+        except:
+            continue
+    # Tenta extrair direto dos primeiros 16 chars como fallback
     try:
-        dt = datetime.strptime(dt_str[:19], '%Y-%m-%dT%H:%M:%S')
+        dt = datetime.strptime(dt_str[:16], '%Y-%m-%dT%H:%M')
         minuto_slot = (dt.minute // 15) * 15
         return dt.strftime(f'%Y-%m-%d %H:{minuto_slot:02d}')
     except:
-        return "desconhecido"
+        return None  # Retorna None em vez de "desconhecido" para ignorar a linha
 
 def carregar_chaves_existentes(filepath, key_cols):
     chaves = set()
@@ -86,9 +104,9 @@ def processar_conta(acc):
                     stats["Undelivered"] += 1; chave = "Undelivered"
                 else:
                     stats["Unknown"] += 1; chave = "Unknown"
-                if slot not in horario:
+                if slot and slot not in horario:
                     horario[slot] = {"Delivered": 0, "Failed": 0, "Undelivered": 0, "Unknown": 0}
-                horario[slot][chave] += 1
+                if slot: horario[slot][chave] += 1
             next_uri = body.get("next_page_uri")
             url = f"https://api.twilio.com{next_uri}" if next_uri else None
             params = {}
