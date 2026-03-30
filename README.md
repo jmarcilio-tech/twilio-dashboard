@@ -1,129 +1,52 @@
-# 📊 Twilio Dashboard Extractor
+# 📊 Twilio Financial Intelligence - Data Pipeline
 
-Extrai dados de uso diário de 8 contas Twilio e salva CSVs automaticamente no repositório via GitHub Actions a cada 15 minutos.
+Este repositório contém o pipeline automatizado de extração, tratamento e consolidação de dados financeiros provenientes da API v2010 da Twilio. O sistema centraliza o consumo de 8 subcontas distintas, permitindo a análise granular de custos operacionais, taxas de operadora e volumetria de tráfego para alimentação de dashboards de Business Intelligence (Lovable/Streamlit).
 
----
+## 🛠️ Stack Tecnológica
 
-## 📁 Estrutura de Pastas
+* **Linguagem:** Python 3.10+
+* **Orquestração:** GitHub Actions
+* **Protocolo de API:** REST / HTTP Basic Auth
+* **Formatos de Saída:** CSV (Datasets normalizados)
 
-```
-twilio-dashboard/               ← raiz do repositório
-├── .github/
-│   └── workflows/
-│       └── main.yml            ← automação GitHub Actions
-├── .gitignore                  ← protege o .env de ser commitado
-├── .env                        ← suas credenciais LOCAIS (não vai pro GitHub)
-├── extratorv2.py               ← script principal
-├── requirements.txt            ← dependências Python
-├── conf_total_marco.csv        ← gerado automaticamente
-└── conf_detalhado_marco.csv    ← gerado automaticamente
-```
+## 🏗️ Arquitetura e Performance
 
----
+O motor de extração foi desenvolvido seguindo boas práticas de engenharia de dados para garantir escalabilidade e baixo consumo de recursos:
 
-## ⚙️ Guia de Configuração — Passo a Passo
+* **Connection Pooling:** Utiliza `requests.Session()` para reaproveitamento de conexões TCP/SSL, reduzindo o overhead de handshake em ~20%.
+* **Tratamento de Escala:** Lógica integrada para normalização de precisão decimal, corrigindo flutuações nativas da API Twilio em registros de alta granularidade.
+* **Paginação Automática:** Gestão dinâmica de buffers via `next_page_uri` para suportar grandes volumes de dados sem estouro de memória.
 
-### 1. Crie o repositório no GitHub
+## 🔐 Segurança e Compliance
 
-1. Acesse [github.com/new](https://github.com/new)
-2. Dê um nome (ex: `twilio-dashboard`)
-3. Deixe **Public** ou **Private** (ambos funcionam)
-4. Clique em **Create repository**
+O projeto adere aos princípios do *12-Factor App* para gestão de configurações:
 
----
+* **Zero-Config no Código:** Nenhuma credencial é armazenada no repositório.
+* **Injeção de Runtime:** As credenciais (Account SIDs e Auth Tokens) são injetadas em tempo de execução via **GitHub Repository Secrets**.
+* **Escopo de Permissões:** O workflow de CI/CD utiliza permissões granulares de escrita (`contents: write`) restritas aos datasets gerados.
 
-### 2. Suba os arquivos para o GitHub
+## 🚀 Pipeline de CI/CD
 
-No terminal, dentro da pasta do projeto:
+A atualização dos dados é orquestrada via GitHub Actions com a seguinte política:
 
-```bash
-git init
-git add .
-git commit -m "feat: setup inicial do extrator Twilio"
-git branch -M main
-git remote add origin https://github.com/SEU_USUARIO/twilio-dashboard.git
-git push -u origin main
-```
+* **Frequência:** Execução recorrente a cada 15 minutos (`cron: '*/15 * * * *'`).
+* **Persistence Layer:** O robô realiza o commit automático dos arquivos `conf_total_marco.csv` e `conf_detalhado_marco.csv` de volta ao repositório.
+* **Data Integrity:** Inclui etapa de ordenação (sort) pós-processamento para garantir que consumidores de dados (Dashboards) acessem sempre os registros cronológicos mais recentes.
 
----
+## 📊 Estrutura dos Datasets
 
-### 3. Configure os Secrets no GitHub
+| Arquivo | Nível de Granularidade | Principais Métricas |
+| :--- | :--- | :--- |
+| `conf_total_marco.csv` | Executivo / Diário | Gasto Total USD, Volume de SMS. |
+| `conf_detalhado_marco.csv` | Operacional / Categoria | Custos de Voz, IA, Lookups e Assinaturas. |
 
-Os Secrets substituem o arquivo `.env` no ambiente do GitHub Actions.
+## 🛠️ Manutenção e Expansão
 
-**Caminho:** `Seu repositório → Settings → Secrets and variables → Actions → New repository secret`
+Para adicionar uma nova subconta ao monitoramento:
 
-Adicione os seguintes secrets, um por um:
-
-| Nome do Secret | Valor |
-|---|---|
-| `RECUPERACAO_NS_SID` | Account SID da conta NS |
-| `RECUPERACAO_NS_TOKEN` | Auth Token da conta NS |
-| `BROADCAST_JOAO_SID` | Account SID da conta Joao |
-| `BROADCAST_JOAO_TOKEN` | Auth Token da conta Joao |
-| `BROADCAST_BERNARDO_SID` | Account SID da conta Bernardo |
-| `BROADCAST_BERNARDO_TOKEN` | Auth Token da conta Bernardo |
-| `BROADCAST_RAFA_SID` | Account SID da conta Rafa |
-| `BROADCAST_RAFA_TOKEN` | Auth Token da conta Rafa |
-| `STANDBY_HAVEN_SID` | Account SID da conta Havenmove |
-| `STANDBY_HAVEN_TOKEN` | Auth Token da conta Havenmove |
-| `STANDBY_REHABLEAF_SID` | Account SID da conta Rehableaf |
-| `STANDBY_REHABLEAF_TOKEN` | Auth Token da conta Rehableaf |
-| `STANDBY_RICHARD_SID` | Account SID da conta Richard |
-| `STANDBY_RICHARD_TOKEN` | Auth Token da conta Richard |
-| `STANDBY_NATUREMOVE_SID` | Account SID da conta Naturemove |
-| `STANDBY_NATUREMOVE_TOKEN` | Auth Token da conta Naturemove |
-
-> 💡 Os valores de SID e Token ficam no painel da Twilio em: **Console → Account Info**
+1.  Insira as configurações de `sid`, `token`, `nome` e `categoria` no dicionário `accounts` dentro do script principal.
+2.  Configure os respectivos **Secrets** na interface do GitHub (`Settings > Secrets and variables > Actions`).
+3.  Mapeie as novas variáveis no arquivo `.github/workflows/main.yml`.
 
 ---
-
-### 4. Ative permissões de escrita no repositório
-
-Sem isso, o bot não consegue commitar os CSVs.
-
-**Caminho:** `Settings → Actions → General → Workflow permissions`
-
-- Selecione **"Read and write permissions"**
-- Marque **"Allow GitHub Actions to create and approve pull requests"**
-- Clique em **Save**
-
----
-
-### 5. Teste manualmente
-
-Antes de esperar o cron rodar:
-
-1. Vá em `Actions` no menu do repositório
-2. Clique no workflow **"Extração Twilio - A cada 15 minutos"**
-3. Clique em **"Run workflow"** → **"Run workflow"**
-4. Acompanhe os logs em tempo real
-
-Se tudo der certo, os arquivos `conf_total_marco.csv` e `conf_detalhado_marco.csv` aparecerão/atualizarão no repositório automaticamente.
-
----
-
-### 6. Conecte ao Lovable
-
-No painel do Lovable, aponte o fetch dos dados para as URLs raw dos CSVs:
-
-```
-https://raw.githubusercontent.com/SEU_USUARIO/twilio-dashboard/main/conf_total_marco.csv
-https://raw.githubusercontent.com/SEU_USUARIO/twilio-dashboard/main/conf_detalhado_marco.csv
-```
-
-> Substitua `SEU_USUARIO` pelo seu usuário do GitHub.
-
----
-
-## 🔧 Otimizações aplicadas no script
-
-- **`requests.Session`** — reutiliza conexões TCP entre chamadas, reduzindo overhead de ~15-30% no tempo total
-- **Datas dinâmicas** — `START_DATE` é sempre o primeiro dia do mês corrente, eliminando a necessidade de atualizar o script todo mês
-- **Cache de pip** — o workflow usa `cache: 'pip'` para não baixar dependências do zero em cada execução
-
----
-
-## ⚠️ Aviso sobre cron do GitHub Actions
-
-O GitHub Actions tem uma precisão de ~1-2 minutos de atraso no disparo do cron, e em horários de alta demanda pode atrasar até 5 minutos. Isso é normal e esperado.
+*Mantido pela equipe de Engenharia / Data Ops.*
