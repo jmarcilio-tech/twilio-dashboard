@@ -132,9 +132,22 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git stash
-          git pull --rebase origin master
-          git stash pop
+          # Copia os CSVs novos para fora do repo
+          cp conf_total_marco.csv /tmp/conf_total_marco.csv
+          cp conf_detalhado_marco.csv /tmp/conf_detalhado_marco.csv
+          cp conf_delivery_stats.csv /tmp/conf_delivery_stats.csv
+          cp conf_delivery_horario.csv /tmp/conf_delivery_horario.csv
+          cp conf_saldos.csv /tmp/conf_saldos.csv
+          # Sincroniza com o remoto
+          git fetch origin master
+          git reset --hard origin/master
+          # Restaura os CSVs novos por cima
+          cp /tmp/conf_total_marco.csv conf_total_marco.csv
+          cp /tmp/conf_detalhado_marco.csv conf_detalhado_marco.csv
+          cp /tmp/conf_delivery_stats.csv conf_delivery_stats.csv
+          cp /tmp/conf_delivery_horario.csv conf_delivery_horario.csv
+          cp /tmp/conf_saldos.csv conf_saldos.csv
+          # Commita e faz push
           git add conf_total_marco.csv conf_detalhado_marco.csv conf_delivery_stats.csv conf_delivery_horario.csv conf_saldos.csv
           git diff --staged --quiet || git commit -m "chore: atualiza CSVs Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
-          git push --force-with-lease origin master
+          git push origin master
