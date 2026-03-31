@@ -160,3 +160,4 @@ with open(csv_horario, "a", newline="", encoding="utf-8") as f:
 
 print(f"📄 {csv_horario} — {len(novas_horario)} slot(s) novo(s) acumulado(s)")
 print(f"✨ Concluído em {EXTRAIDO_EM}")
+ 
