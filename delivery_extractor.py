@@ -8,8 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# --- Configuração da Janela ---
-JANELA_HORAS = float(os.getenv("DELIVERY_JANELA_HORAS", "0.25"))
+JANELA_HORAS = float(os.getenv("DELIVERY_JANELA_HORAS", "0.5"))
 AGORA = datetime.utcnow()
 FILTRO_INICIO = (AGORA - timedelta(hours=JANELA_HORAS)).strftime('%Y-%m-%dT%H:%M:%SZ')
 JANELA_LABEL = f"{int(JANELA_HORAS * 60)}min" if JANELA_HORAS < 1 else f"{int(JANELA_HORAS)}h"
@@ -28,48 +27,15 @@ accounts = [
     {"sid": os.getenv("STANDBY_NATUREMOVE_SID"),    "token": os.getenv("STANDBY_NATUREMOVE_TOKEN"),    "nome": "Naturemove", "categoria": "Standby"},
 ]
 
-_debug_printed = False
-
 def slot_15min(dt_str):
-    """Converte data da Twilio para slot de 15min. Suporta múltiplos formatos."""
-    global _debug_printed
     if not dt_str:
         return None
-
-    # Debug: mostra o formato real na primeira mensagem
-    if not _debug_printed:
-        print(f"🔍 DEBUG formato de data Twilio: '{dt_str}'")
-        _debug_printed = True
-
-    # Formato RFC 2822 que a Twilio usa: "Sun, 29 Mar 2026 23:03:00 +0000"
     try:
         from email.utils import parsedate_to_datetime
         dt = parsedate_to_datetime(dt_str)
         minuto_slot = (dt.minute // 15) * 15
         return dt.strftime(f'%Y-%m-%d %H:{minuto_slot:02d}')
     except:
-        pass
-
-    # Fallbacks
-    formatos = [
-        '%Y-%m-%dT%H:%M:%SZ',
-        '%Y-%m-%dT%H:%M:%S',
-        '%a, %d %b %Y %H:%M:%S %z',
-        '%a, %d %b %Y %H:%M:%S GMT',
-    ]
-    for fmt in formatos:
-        try:
-            dt = datetime.strptime(dt_str.strip(), fmt)
-            minuto_slot = (dt.minute // 15) * 15
-            return dt.strftime(f'%Y-%m-%d %H:{minuto_slot:02d}')
-        except:
-            continue
-    try:
-        dt = datetime.strptime(dt_str[:16], '%Y-%m-%dT%H:%M')
-        minuto_slot = (dt.minute // 15) * 15
-        return dt.strftime(f'%Y-%m-%d %H:{minuto_slot:02d}')
-    except:
-        print(f"⚠️  Não conseguiu parsear: '{dt_str}'")
         return None
 
 def carregar_chaves_existentes(filepath, key_cols):
@@ -87,44 +53,53 @@ def carregar_chaves_existentes(filepath, key_cols):
 def processar_conta(acc):
     sid, token, nome, cat = acc["sid"], acc["token"], acc["nome"], acc["categoria"]
     if not sid or not token:
-        print(f"⚠️  Pulei {nome}: credenciais ausentes.")
         return None
 
     session = requests.Session()
     session.auth = HTTPBasicAuth(sid, token)
 
-    stats = {"Total": 0, "Delivered": 0, "Failed": 0, "Undelivered": 0, "Unknown": 0}
+    # Contagem por mensagem E por segmento (igual ao painel da Twilio)
+    stats_msg = {"Total": 0, "Delivered": 0, "Failed": 0, "Undelivered": 0, "Sent": 0, "Sending": 0, "Unknown": 0}
+    stats_seg = {"Total": 0, "Delivered": 0, "Failed": 0, "Undelivered": 0, "Sent": 0, "Sending": 0, "Unknown": 0}
     horario = {}
 
     url = f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json"
     params = {"DateSent>": FILTRO_INICIO, "PageSize": 1000}
-    paginas = 0
 
     while url:
         try:
             r = session.get(url, params=params, timeout=30)
             if r.status_code != 200:
-                print(f"❌ Erro {r.status_code} em {nome}")
                 break
             body = r.json()
-            msgs = body.get("messages", [])
-            paginas += 1
-            for m in msgs:
-                status = m.get("status", "unknown")
-                sent_at = m.get("date_sent") or m.get("date_created", "")
-                slot = slot_15min(sent_at)
-                stats["Total"] += 1
+            for m in body.get("messages", []):
+                status   = m.get("status", "unknown").lower()
+                sent_at  = m.get("date_sent") or m.get("date_created", "")
+                slot     = slot_15min(sent_at)
+                # num_segments: quantos SMS foram usados (igual ao painel Twilio)
+                segments = int(m.get("num_segments", 1) or 1)
+
+                stats_msg["Total"] += 1
+                stats_seg["Total"] += segments
+
                 if status == "delivered":
-                    stats["Delivered"] += 1; chave = "Delivered"
+                    stats_msg["Delivered"] += 1;   stats_seg["Delivered"] += segments;   chave = "Delivered"
                 elif status == "failed":
-                    stats["Failed"] += 1; chave = "Failed"
-                elif status == "undelivered":
-                    stats["Undelivered"] += 1; chave = "Undelivered"
+                    stats_msg["Failed"] += 1;       stats_seg["Failed"] += segments;       chave = "Failed"
+                elif status in ["undelivered", "rejected"]:
+                    stats_msg["Undelivered"] += 1;  stats_seg["Undelivered"] += segments;  chave = "Undelivered"
+                elif status == "sent":
+                    stats_msg["Sent"] += 1;         stats_seg["Sent"] += segments;         chave = "Sent"
+                elif status in ["sending", "queued"]:
+                    stats_msg["Sending"] += 1;      stats_seg["Sending"] += segments;      chave = "Sending"
                 else:
-                    stats["Unknown"] += 1; chave = "Unknown"
-                if slot and slot not in horario:
-                    horario[slot] = {"Delivered": 0, "Failed": 0, "Undelivered": 0, "Unknown": 0}
-                if slot: horario[slot][chave] += 1
+                    stats_msg["Unknown"] += 1;      stats_seg["Unknown"] += segments;      chave = "Unknown"
+
+                if slot:
+                    if slot not in horario:
+                        horario[slot] = {"Delivered": 0, "Failed": 0, "Undelivered": 0, "Sent": 0, "Sending": 0, "Unknown": 0}
+                    horario[slot][chave] += segments  # usa segmentos no gráfico também
+
             next_uri = body.get("next_page_uri")
             url = f"https://api.twilio.com{next_uri}" if next_uri else None
             params = {}
@@ -132,60 +107,57 @@ def processar_conta(acc):
             print(f"❌ Falha em {nome}: {e}")
             break
 
-    taxa = round((stats["Delivered"] / stats["Total"] * 100), 2) if stats["Total"] > 0 else 0.0
-    print(f"✅ {nome} [{cat}] — {stats['Total']} msgs | {taxa}% entregues | {paginas} pág(s)")
-    return {"nome": nome, "cat": cat, "stats": stats, "taxa": taxa, "horario": horario}
+    taxa = round((stats_seg["Delivered"] / stats_seg["Total"] * 100), 2) if stats_seg["Total"] > 0 else 0.0
+    print(f"✅ {nome} [{cat}] — {stats_msg['Total']} msgs | {stats_seg['Total']} segmentos | {taxa}% entregues")
+    return {"nome": nome, "cat": cat, "stats_msg": stats_msg, "stats_seg": stats_seg, "taxa": taxa, "horario": horario}
 
-# --- Execução Paralela ---
-print(f"🚀 Extração Delivery | Janela: últimos {JANELA_LABEL} | De: {FILTRO_INICIO} UTC")
-print(f"🔀 Processando {len(accounts)} contas em paralelo...\n")
+print(f"🚀 Delivery | Janela: {JANELA_LABEL} | De: {FILTRO_INICIO} UTC | {len(accounts)} contas em paralelo")
 
 with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
     resultados = list(executor.map(processar_conta, accounts))
+resultados = [r for r in resultados if r is not None and r["stats_seg"]["Total"] > 0]
 
-resultados = [r for r in resultados if r is not None and r["stats"]["Total"] > 0]
 EXTRAIDO_EM = AGORA.strftime('%Y-%m-%d %H:%M UTC')
 
-# --- Acumular conf_delivery_stats.csv ---
-# Chave: Conta + Extraido_Em (evita duplicar a mesma execução)
-chaves_stats = carregar_chaves_existentes(csv_stats, key_cols=[0, 9])
-novas_stats = []
-for r in resultados:
-    if (r["nome"], EXTRAIDO_EM) not in chaves_stats:
-        novas_stats.append([
-            r["nome"], r["cat"], JANELA_LABEL,
-            r["stats"]["Total"], r["stats"]["Delivered"],
-            r["stats"]["Failed"], r["stats"]["Undelivered"],
-            r["stats"]["Unknown"], r["taxa"], EXTRAIDO_EM
-        ])
-
-escrever_header = not os.path.exists(csv_stats)
-with open(csv_stats, "a", newline="", encoding="utf-8") as f:
+# --- conf_delivery_stats.csv: SNAPSHOT (sobrescreve sempre) ---
+# Usa contagem por SEGMENTO para bater com o painel da Twilio
+with open(csv_stats, "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f)
-    if escrever_header:
-        w.writerow(["Conta", "Categoria", "Janela", "Total", "Delivered", "Failed", "Undelivered", "Unknown", "Taxa_Entrega_%", "Extraido_Em"])
-    w.writerows(novas_stats)
-print(f"📄 {csv_stats} — {len(novas_stats)} linha(s) novas adicionadas")
+    w.writerow(["Conta", "Categoria", "Janela", "Mensagens", "Segmentos",
+                "Delivered", "Failed", "Undelivered", "Sent", "Sending",
+                "Unknown", "Taxa_Entrega_%", "Extraido_Em"])
+    for r in resultados:
+        w.writerow([
+            r["nome"], r["cat"], JANELA_LABEL,
+            r["stats_msg"]["Total"], r["stats_seg"]["Total"],
+            r["stats_seg"]["Delivered"], r["stats_seg"]["Failed"],
+            r["stats_seg"]["Undelivered"], r["stats_seg"]["Sent"],
+            r["stats_seg"]["Sending"], r["stats_seg"]["Unknown"],
+            r["taxa"], EXTRAIDO_EM
+        ])
+print(f"📄 {csv_stats} — snapshot de {len(resultados)} conta(s) por segmentos")
 
-# --- Acumular conf_delivery_horario.csv ---
-# Chave: Slot_15min + Conta (evita duplicar o mesmo slot)
+# --- conf_delivery_horario.csv: ACUMULA (histórico crescente) ---
 chaves_horario = carregar_chaves_existentes(csv_horario, key_cols=[0, 1])
+
 novas_horario = []
 for r in resultados:
-    for slot, breakdown in r["horario"].items():
+    for slot, b in r["horario"].items():
         if (slot, r["nome"]) not in chaves_horario:
             novas_horario.append([
                 slot, r["nome"], r["cat"],
-                breakdown["Delivered"], breakdown["Failed"],
-                breakdown["Undelivered"], breakdown["Unknown"],
-                sum(breakdown.values())
+                b["Delivered"], b["Failed"], b["Undelivered"],
+                b["Sent"], b["Sending"], b["Unknown"],
+                sum(b.values())
             ])
 
 escrever_header = not os.path.exists(csv_horario)
 with open(csv_horario, "a", newline="", encoding="utf-8") as f:
     w = csv.writer(f)
     if escrever_header:
-        w.writerow(["Slot_15min", "Conta", "Categoria", "Delivered", "Failed", "Undelivered", "Unknown", "Total_Slot"])
+        w.writerow(["Slot_15min", "Conta", "Categoria", "Delivered", "Failed",
+                    "Undelivered", "Sent", "Sending", "Unknown", "Total_Slot"])
     w.writerows(novas_horario)
-print(f"📄 {csv_horario} — {len(novas_horario)} linha(s) novas adicionadas")
-print(f"\n✨ Acumulação concluída em {EXTRAIDO_EM}")
+
+print(f"📄 {csv_horario} — {len(novas_horario)} slot(s) novo(s) acumulado(s)")
+print(f"✨ Concluído em {EXTRAIDO_EM}")
