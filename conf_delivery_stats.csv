@@ -1,5 +1,6 @@
 Conta,Categoria,Janela,Mensagens,Segmentos,Delivered,Failed,Undelivered,Sent,Sending,Unknown,Taxa_Entrega_%,Extraido_Em
-Joao,Broadcast,30min,1,1,0,0,0,0,0,1,0.0,2026-04-02 09:41 UTC
-Bernardo,Broadcast,30min,10,10,0,0,0,0,0,10,0.0,2026-04-02 09:41 UTC
-Havenmove,Standby,30min,1,1,0,0,0,0,0,1,0.0,2026-04-02 09:41 UTC
-Richard,Standby,30min,51,100,92,0,6,0,0,2,92.0,2026-04-02 09:41 UTC
+NS,Recuperação,30min,4,5,2,0,0,0,0,3,40.0,2026-04-02 12:02 UTC
+Joao,Broadcast,30min,5,5,0,0,0,0,0,5,0.0,2026-04-02 12:02 UTC
+Bernardo,Broadcast,30min,40,40,0,0,0,0,0,40,0.0,2026-04-02 12:02 UTC
+Havenmove,Standby,30min,5,5,0,0,0,0,0,5,0.0,2026-04-02 12:02 UTC
+Richard,Standby,30min,88,171,152,1,10,0,0,8,88.89,2026-04-02 12:02 UTC
