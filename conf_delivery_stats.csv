@@ -1,8 +1,7 @@
-Conta,Categoria,Janela,Total,Delivered,Failed,Undelivered,Sent,Sending,Unknown,Taxa_Entrega_%,Extraido_Em
-NS,Recuperação,24h,4896,4558,18,71,49,0,200,93.1,2026-03-30 18:26 UTC
-Joao,Broadcast,24h,299564,255627,27092,10077,4496,0,2272,85.33,2026-03-30 18:26 UTC
-Bernardo,Broadcast,24h,552029,466137,40898,13955,10742,0,20297,84.44,2026-03-30 18:26 UTC
-Rafa,Broadcast,24h,17,0,0,0,0,0,17,0.0,2026-03-30 18:26 UTC
-Havenmove,Standby,24h,11946,9808,0,221,127,0,1790,82.1,2026-03-30 18:26 UTC
-Richard,Standby,24h,21258,18943,52,444,273,0,1546,89.11,2026-03-30 18:26 UTC
-Naturemove,Standby,24h,17,0,0,0,0,0,17,0.0,2026-03-30 18:26 UTC
+Conta,Categoria,Janela,Mensagens,Segmentos,Delivered,Failed,Undelivered,Sent,Sending,Unknown,Taxa_Entrega_%,Extraido_Em
+NS,Recuperação,30min,5,6,2,3,0,0,0,1,33.33,2026-04-14 20:43 UTC
+Joao,Broadcast,30min,265,277,0,0,0,0,0,277,0.0,2026-04-14 20:43 UTC
+Bernardo,Broadcast,30min,214,226,0,0,0,0,0,226,0.0,2026-04-14 20:43 UTC
+Rafa,Broadcast,30min,2,2,0,0,0,0,0,2,0.0,2026-04-14 20:43 UTC
+Havenmove,Standby,30min,143,143,0,0,0,0,0,143,0.0,2026-04-14 20:43 UTC
+Richard,Standby,30min,142,274,242,4,6,8,0,14,88.32,2026-04-14 20:43 UTC
