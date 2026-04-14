@@ -8,6 +8,11 @@ on:
 permissions:
   contents: write
 
+# Node 20 nos runners está deprecado; actions/checkout etc. passam a Node 24 por defeito em Jun/2026.
+# Ver: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
 
   financeiro:
