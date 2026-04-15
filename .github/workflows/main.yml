@@ -1,8 +1,11 @@
 name: Extração Twilio - A cada 15 minutos
 
+# Agenda: minutos 7,22,37,52 de cada hora (15 em 15 min), desfasado do pico :00/:15/:30/:45 UTC
+# para reduzir atrasos do agendador da GitHub. O `schedule` continua a ser "best effort":
+# https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -12,6 +15,8 @@ permissions:
 # Ver: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  # Janela do delivery_extractor = 15 min (igual ao intervalo desejado). Não usar secret > 0.25 sem querer alargar.
+  DELIVERY_JANELA_HORAS: "0.25"
 
 jobs:
 
@@ -77,7 +82,6 @@ jobs:
           STANDBY_RICHARD_TOKEN: ${{ secrets.STANDBY_RICHARD_TOKEN }}
           STANDBY_NATUREMOVE_SID: ${{ secrets.STANDBY_NATUREMOVE_SID }}
           STANDBY_NATUREMOVE_TOKEN: ${{ secrets.STANDBY_NATUREMOVE_TOKEN }}
-          DELIVERY_JANELA_HORAS: ${{ secrets.DELIVERY_JANELA_HORAS }}
         run: python delivery_extractor.py
       - uses: actions/upload-artifact@v4
         with:
@@ -122,6 +126,10 @@ jobs:
   commitar:
     runs-on: ubuntu-latest
     needs: [financeiro, delivery, saldos]
+    # Evita dois pushes ao mesmo tempo quando há execuções sobrepostas; não cancela extrações.
+    concurrency:
+      group: twilio-extracao-commit-${{ github.ref }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4

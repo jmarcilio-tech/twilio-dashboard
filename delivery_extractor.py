@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-JANELA_HORAS = float(os.getenv("DELIVERY_JANELA_HORAS", "0.5"))
+# Default 0.25h = 15 min (alinhado ao intervalo do CI). Sobrescrever com DELIVERY_JANELA_HORAS no .env.
+JANELA_HORAS = float(os.getenv("DELIVERY_JANELA_HORAS", "0.25"))
 AGORA = datetime.utcnow()
 FILTRO_INICIO = (AGORA - timedelta(hours=JANELA_HORAS)).strftime('%Y-%m-%dT%H:%M:%SZ')
 JANELA_LABEL = f"{int(JANELA_HORAS * 60)}min" if JANELA_HORAS < 1 else f"{int(JANELA_HORAS)}h"
