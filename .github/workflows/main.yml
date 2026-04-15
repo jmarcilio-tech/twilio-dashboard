@@ -7,6 +7,16 @@ on:
   schedule:
     - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
+    inputs:
+      delivery_fetch_mode:
+        description: "delivery_extractor — auto=mês 1× + depois 15min; baseline_24h=teste; baseline_mes=forçar mês; incremental=só janela"
+        type: choice
+        default: auto
+        options:
+          - auto
+          - incremental
+          - baseline_mes
+          - baseline_24h
 
 permissions:
   contents: write
@@ -15,8 +25,10 @@ permissions:
 # Ver: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  # Janela do delivery_extractor = 15 min (igual ao intervalo desejado). Não usar secret > 0.25 sem querer alargar.
+  # Janela só em modo incremental (15 min). Baseline mensal/24h ignora isto para o DateSent>.
   DELIVERY_JANELA_HORAS: "0.25"
+  # auto: baseline mensal 1× por mês (ficheiro no repo); depois incremental. Dispatch permite baseline_24h.
+  DELIVERY_FETCH_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.delivery_fetch_mode || 'auto' }}
 
 jobs:
 
@@ -89,6 +101,7 @@ jobs:
           path: |
             conf_delivery_stats.csv
             conf_delivery_horario.csv
+            delivery_sync_state.json
 
   saldos:
     runs-on: ubuntu-latest
@@ -150,6 +163,7 @@ jobs:
           cp conf_detalhado_marco.csv /tmp/conf_detalhado_marco.csv
           cp conf_delivery_stats.csv /tmp/conf_delivery_stats.csv
           cp conf_delivery_horario.csv /tmp/conf_delivery_horario.csv
+          if [ -f delivery_sync_state.json ]; then cp delivery_sync_state.json /tmp/delivery_sync_state.json; fi
           cp conf_saldos.csv /tmp/conf_saldos.csv
           # Sincroniza com o remoto
           git fetch origin master
@@ -159,8 +173,10 @@ jobs:
           cp /tmp/conf_detalhado_marco.csv conf_detalhado_marco.csv
           cp /tmp/conf_delivery_stats.csv conf_delivery_stats.csv
           cp /tmp/conf_delivery_horario.csv conf_delivery_horario.csv
+          if [ -f /tmp/delivery_sync_state.json ]; then cp /tmp/delivery_sync_state.json delivery_sync_state.json; fi
           cp /tmp/conf_saldos.csv conf_saldos.csv
           # Commita e faz push
           git add conf_total_marco.csv conf_detalhado_marco.csv conf_delivery_stats.csv conf_delivery_horario.csv conf_saldos.csv
+          if [ -f delivery_sync_state.json ]; then git add delivery_sync_state.json; fi
           git diff --staged --quiet || git commit -m "chore: atualiza CSVs Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push origin master
