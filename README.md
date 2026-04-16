@@ -27,11 +27,30 @@ O projeto adere aos princípios do *12-Factor App* para gestão de configuraçõ
 
 ## 🚀 Pipeline de CI/CD
 
-A atualização dos dados é orquestrada via GitHub Actions com a seguinte política:
+A atualização dos dados é orquestrada via GitHub Actions com dois workflows:
 
-* **Frequência:** Execução recorrente a cada 15 minutos (`cron: '*/15 * * * *'`).
-* **Persistence Layer:** O robô realiza o commit automático dos arquivos `conf_total_marco.csv` e `conf_detalhado_marco.csv` de volta ao repositório.
-* **Data Integrity:** Inclui etapa de ordenação (sort) pós-processamento para garantir que consumidores de dados (Dashboards) acessem sempre os registros cronológicos mais recentes.
+* **Delivery dedicado:** `.github/workflows/delivery-only.yml` com frequência alvo de 5 min.
+* **Financeiro + saldos:** `.github/workflows/main.yml` com frequência menor para não bloquear delivery.
+* **Persistence Layer:** o robô commita automaticamente os CSVs atualizados no `master`.
+
+### Scheduler Externo (recomendado para reduzir variação)
+
+O `schedule` do GitHub é *best effort*. Para maior previsibilidade da janela de 5 minutos, dispare o workflow de delivery por API:
+
+1. Crie um token no GitHub com permissão de repositório: **Actions (write)** e **Contents (read)**.
+2. Configure um scheduler externo para chamar a API a cada 5 minutos.
+
+Exemplo de request:
+
+```bash
+curl -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer <GITHUB_TOKEN>" \
+  https://api.github.com/repos/jmarcilio-tech/twilio-dashboard/dispatches \
+  -d '{"event_type":"delivery_tick"}'
+```
+
+Opcionalmente mantenha também o `schedule` do GitHub como fallback.
 
 ## 📊 Estrutura dos Datasets
 

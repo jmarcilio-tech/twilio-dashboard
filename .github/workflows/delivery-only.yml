@@ -4,6 +4,8 @@ name: Extração Twilio - Delivery (5 min)
 on:
   schedule:
     - cron: "2-59/5 * * * *"
+  repository_dispatch:
+    types: [delivery_tick]
   workflow_dispatch:
     inputs:
       delivery_fetch_mode:
@@ -19,18 +21,24 @@ on:
 permissions:
   contents: write
 
+# Reduz backlog: mantém só a execução mais recente de delivery por branch.
+concurrency:
+  group: twilio-delivery-run-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   # Janela só em modo incremental (5 min). Baseline mensal/24h ignora isto para o DateSent>.
   DELIVERY_JANELA_HORAS: "0.0833333333"
-  # auto: baseline mensal 1× por mês (ficheiro no repo); depois incremental.
-  DELIVERY_FETCH_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.delivery_fetch_mode || 'auto' }}
+  # workflow_dispatch pode forçar modo; scheduler externo usa incremental para máxima previsibilidade.
+  DELIVERY_FETCH_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.delivery_fetch_mode || (github.event_name == 'repository_dispatch' && 'incremental' || 'auto') }}
   # outbound = mesmo recorte que Messaging Insights → Delivery & Errors → Outgoing
   DELIVERY_DIRECTION: outbound
 
 jobs:
   delivery:
     runs-on: ubuntu-latest
+    timeout-minutes: 4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -74,7 +82,7 @@ jobs:
     # Evita dois pushes de delivery simultâneos.
     concurrency:
       group: twilio-delivery-commit-${{ github.ref }}
-      cancel-in-progress: false
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
