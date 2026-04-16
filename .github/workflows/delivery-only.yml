@@ -43,9 +43,9 @@ jobs:
       - name: 🔐 Validar token do scheduler externo
         if: ${{ github.event_name == 'repository_dispatch' && secrets.EXTERNAL_DISPATCH_TOKEN != '' }}
         env:
-          PAYLOAD_TOKEN: ${{ github.event.client_payload.token || '' }}
           EXPECTED_TOKEN: ${{ secrets.EXTERNAL_DISPATCH_TOKEN }}
         run: |
+          PAYLOAD_TOKEN="$(jq -r '.client_payload.token // ""' "$GITHUB_EVENT_PATH")"
           if [ -z "$PAYLOAD_TOKEN" ] || [ "$PAYLOAD_TOKEN" != "$EXPECTED_TOKEN" ]; then
             echo "repository_dispatch rejeitado: token invalido ou ausente."
             exit 1
