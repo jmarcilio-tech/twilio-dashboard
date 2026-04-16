@@ -1,2 +1,5 @@
 Conta,Categoria,Janela,Modo,Direcao,Mensagens,Segmentos,Delivered,Failed,Undelivered,Sent,Sending,Delivery_Unknown,Accepted,Queued,Taxa_Entrega_%,Extraido_Em
-NS,Recuperação,4min,incremental,outbound,16,35,33,0,0,2,0,0,0,0,94.29,2026-04-16 19:56 UTC
+NS,Recuperação,4min,incremental,outbound,10,20,19,1,0,0,0,0,0,0,95.0,2026-04-16 20:01 UTC
+Joao,Broadcast,4min,incremental,outbound,2620,2620,2045,202,101,272,0,0,0,0,78.05,2026-04-16 20:01 UTC
+Bernardo,Broadcast,4min,incremental,outbound,1510,1510,1162,133,35,180,0,0,0,0,76.95,2026-04-16 20:01 UTC
+Richard,Standby,4min,incremental,outbound,2,3,2,1,0,0,0,0,0,0,66.67,2026-04-16 20:01 UTC
