@@ -1,5 +1,5 @@
 {
-  "last_run_utc": "2026-04-16T20:31:10Z",
+  "last_run_utc": "2026-04-16T20:36:15Z",
   "last_fetch_mode": "incremental",
   "baseline_month": "2026-04",
   "baseline_completed_at": "2026-04-15T22:05:44Z",
@@ -8,13 +8,13 @@
   "delivery_window_preset": "janela_horas",
   "api_pages_by_account": {
     "NS": 6,
-    "Joao": 16,
-    "Bernardo": 10,
+    "Joao": 5,
+    "Bernardo": 5,
     "Rafa": 5,
     "Havenmove": 5,
     "Rehableaf": 1,
     "Richard": 6,
-    "Naturemove": 31
+    "Naturemove": 38
   },
   "api_pages_capped_by_account": {}
 }
