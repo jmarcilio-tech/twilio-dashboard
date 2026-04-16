@@ -114,7 +114,7 @@
 | **Outgoing / delivery ao vivo** (Messaging Insights, ~janela do job) | `conf_delivery_stats.csv` | Não somar `conf_delivery_horario.csv` para o mesmo “headline total”; não usar `conf_delivery_stats_history.csv` como número atual |
 | **Gráfico 15 min / heatmap dia** | `conf_delivery_horario.csv` (slots UTC) | Não usar como substituto do total da consola sem filtrar o dia e sem clarificar que é série agregada por slot |
 | **Série / tendência larga** (ontem 00:00 UTC → agora, append diário) | `conf_delivery_stats_history.csv` | Não apresentar como snapshot “agora”; cada linha é uma execução/janela gravada no histórico |
-| **Total Spend / SMS Usage / preço (Account Insights, dia GMT)** | `conf_usage_billing_snapshot.csv` | Não comparar diretamente com totais do snapshot de delivery (API e janela diferentes) |
+| **Total Spend / SMS (~Last 24h Insights)** | `conf_usage_billing_snapshot.csv` | Default **rolling_24h_proxy** (Usage Daily + mistura por hora; ver coluna `Range`). **SMS_Usage** costuma aproximar “SMS Transactions” melhor que `SMS_Count`. Não misturar com delivery |
 | **Saúde do pipeline** | `delivery_sync_state.json` | Metadados apenas (ex.: `last_run_utc`, `api_pages_by_account`) |
 
 **Regras de leitura**
@@ -146,7 +146,7 @@ Regra de ouro — UMA fonte por vista:
 1) KPIs de messaging / outgoing em tempo quase real: ler só conf_delivery_stats.csv. É um snapshot por execução (~5 min): coluna Janela descreve a janela (ex. 4min ou since_yesterday_utc_*). Não somar conf_delivery_horario.csv para obter o mesmo número que este snapshot.
 2) Gráficos por intervalo de 15 minutos (UTC): conf_delivery_horario.csv — cabeçalho inclui Slot_15min, Conta, Categoria, estados por segmento, Total_Slot.
 3) Histórico / séries longas (varredura diária): conf_delivery_stats_history.csv — mesmo schema que conf_delivery_stats.csv mas append ao longo do tempo; não usar como valor “atual” da conta sem filtrar pela última linha ou pelo Github_Run_Id/Extraido_Em desejados.
-4) Billing próximo da consola Account Insights (Usage Records, granularidade dia GMT): conf_usage_billing_snapshot.csv. A consola “Last 24 hours” é janela rolante; o CSV usa estratégia documentada no workflow (default end_utc_day = dia civil UTC corrente). Para “SMS Transactions” comparar SMS_Count vs SMS_Usage com o card da Twilio (usage costuma refletir segmentos).
+4) Billing ~**Last 24 hours** (Insights): conf_usage_billing_snapshot.csv — default **rolling_24h_proxy** (Daily + blend por hora). **TotalPrice_Totalprice** / **SMS_Price** vs spend; “SMS Transactions” → comparar sobretudo **SMS_Usage** (e **SMS_Count** como referência secundária).
 5) Estado operacional (último run, páginas API): delivery_sync_state.json — só metadados/health, não misturar com totais de billing.
 
 Implementação UI:
@@ -155,7 +155,7 @@ Implementação UI:
 - Se Api_Pages_Capped=1 numa conta, mostrar aviso de dados possivelmente truncados.
 - Não expor secrets; URL do repo pode ser pública read-only.
 
-Não fazer: misturar totais de conf_delivery_horario com conf_delivery_stats no mesmo KPI; assumir que Mensagens e Segmentos são intercambiáveis; comparar billing Last-24h rolante com um único dia UTC sem explicar a diferença.
+Não fazer: misturar totais de conf_delivery_horario com conf_delivery_stats no mesmo KPI; assumir que Mensagens e Segmentos são intercambiáveis; tratar o CSV billing como paridade exacta ao pixel com Insights (é aproximação API GMT).
 ```
 
 ---

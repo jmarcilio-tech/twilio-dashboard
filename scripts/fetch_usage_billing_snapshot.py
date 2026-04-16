@@ -9,12 +9,13 @@ intersectam as ultimas N horas (pode diferir ligeiramente do card da consola).
 
 Env:
   USAGE_SNAPSHOT_HOURS — default 24 (so usado em cover_days)
-  USAGE_DATE_STRATEGY —
-      cover_days — dias civis UTC que intersectam [agora-hours, agora] (2 dias = soma GRANDE; diverge da consola).
-      end_utc_day — StartDate=EndDate=dia UTC de agora (um dia; muitas vezes mais perto do card "Last 24h" a tarde/noite UTC).
-      start_utc_day — so o dia UTC em que comecou a janela rolling (um dia).
-      twilio_offsets — StartDate=-1days EndDate=today (interpretacao Twilio).
-      today_subresource — GET .../Usage/Records/Today.json (agregado "hoje GMT" so; pode bater se a consola estiver alinhada a isso).
+  USAGE_DATE_STRATEGY (default: rolling_24h_proxy) —
+      rolling_24h_proxy — Usage/Records/Daily por categoria + mistura por hora na janela [agora-hours, agora] (~**Last 24h** Insights; pressupoe uso uniforme por hora em cada dia UTC).
+      end_utc_day — um dia civil UTC (subestima Last 24h na maior parte do dia).
+      twilio_offsets — StartDate=-1days EndDate=hoje (**soma dois dias GMT inteiros** — costuma **superar** Last 24h).
+      cover_days — dias UTC tocados pela janela (1–2 dias completos na API).
+      start_utc_day — so o dia UTC do inicio da janela.
+      today_subresource — GET .../Usage/Records/Today.json.
   USAGE_UTC_DAY — se YYYY-MM-DD, forca StartDate=EndDate=esse dia (ignora USAGE_DATE_STRATEGY).
   TEST_USAGE_ACCOUNT — filtrar por nome (ex.: NS); vazio = todas com credenciais
   USAGE_WRITE_CSV — 1 grava conf_usage_billing_snapshot.csv na raiz do repo
@@ -95,6 +96,75 @@ def fetch_usage_records(sid: str, token: str, params: dict) -> list[dict]:
     return fetch_usage_records_url(sid, token, "", params)
 
 
+def utc_midnight(d: datetime) -> datetime:
+    return datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=timezone.utc)
+
+
+def overlap_hours_utc_day(t0: datetime, t1: datetime, day: datetime) -> float:
+    ds = utc_midnight(day)
+    de = ds + timedelta(days=1)
+    a = max(t0, ds)
+    b = min(t1, de)
+    if b <= a:
+        return 0.0
+    return (b - a).total_seconds() / 3600.0
+
+
+def fetch_daily_category(sid: str, token: str, category: str, start_d: str, end_d: str) -> list[dict]:
+    params = {"Category": category, "StartDate": start_d, "EndDate": end_d, "PageSize": 1000}
+    return fetch_usage_records_url(sid, token, "/Daily", params)
+
+
+def blend_daily_metric(rows: list[dict], agora: datetime, hours: float, field: str) -> float:
+    """Soma_v * (horas da janela [agora-hours, agora] sobre o dia v / 24)."""
+    t1 = agora
+    t0 = agora - timedelta(hours=hours)
+    acc = 0.0
+    for r in rows:
+        sd = (r.get("start_date") or "")[:10]
+        if len(sd) != 10:
+            continue
+        try:
+            y, m_, d_ = int(sd[0:4]), int(sd[5:7]), int(sd[8:10])
+            day = datetime(y, m_, d_, 0, 0, 0, tzinfo=timezone.utc)
+        except ValueError:
+            continue
+        h = overlap_hours_utc_day(t0, t1, day)
+        if h <= 0:
+            continue
+        v = parse_float(r.get(field))
+        acc += v * (h / 24.0)
+    return acc
+
+
+def blended_headline_billing(sid: str, token: str, agora: datetime, hours: float) -> dict:
+    """
+    Proxy ~Last 24h (Account Insights): Daily por categoria + mistura por hora.
+    sms_sub / sum_price exceto totalprice: snapshot do dia UTC corrente (auxiliar).
+    """
+    t0 = agora - timedelta(hours=hours)
+    start_d = t0.strftime("%Y-%m-%d")
+    end_d = agora.strftime("%Y-%m-%d")
+    daily_tp = fetch_daily_category(sid, token, "totalprice", start_d, end_d)
+    daily_sms = fetch_daily_category(sid, token, "sms", start_d, end_d)
+    totalprice = blend_daily_metric(daily_tp, agora, hours, "price")
+    sms_price = blend_daily_metric(daily_sms, agora, hours, "price")
+    sms_count = blend_daily_metric(daily_sms, agora, hours, "count")
+    sms_usage = blend_daily_metric(daily_sms, agora, hours, "usage")
+    today_d = agora.strftime("%Y-%m-%d")
+    recs_today = fetch_usage_records_url(sid, token, "", {"StartDate": today_d, "EndDate": today_d, "PageSize": 1000})
+    aux = summarize(recs_today)
+    return {
+        "totalprice": totalprice,
+        "sms_count": int(round(sms_count)),
+        "sms_usage": int(round(sms_usage)),
+        "sms_price": sms_price,
+        "sum_price_all_but_totalprice": aux["sum_price_all_but_totalprice"],
+        "categories": aux["categories"],
+        "sms_sub_top": aux["sms_sub_top"],
+    }
+
+
 def summarize(records: list[dict]) -> dict:
     by_cat = {r.get("category", ""): r for r in records}
     totalprice_rec = by_cat.get("totalprice") or {}
@@ -130,7 +200,7 @@ def summarize(records: list[dict]) -> dict:
 
 def main():
     hours = float(os.getenv("USAGE_SNAPSHOT_HOURS", "24"))
-    strategy = os.getenv("USAGE_DATE_STRATEGY", "end_utc_day").strip().lower()
+    strategy = os.getenv("USAGE_DATE_STRATEGY", "rolling_24h_proxy").strip().lower()
     forced_day = (os.getenv("USAGE_UTC_DAY") or "").strip()
     pick = (os.getenv("TEST_USAGE_ACCOUNT") or "").strip().lower()
     write_csv = os.getenv("USAGE_WRITE_CSV", "").strip().lower() in ("1", "true", "yes")
@@ -142,6 +212,10 @@ def main():
         params["StartDate"] = forced_day
         params["EndDate"] = forced_day
         range_label = f"StartDate=EndDate={forced_day} UTC (USAGE_UTC_DAY)"
+    elif strategy == "rolling_24h_proxy":
+        range_label = (
+            f"rolling_24h_proxy: Daily blend {hours:g}h UTC (~Account Insights Last 24h; uniforme/hora)"
+        )
     elif strategy == "twilio_offsets":
         params["StartDate"] = "-1days"
         params["EndDate"] = agora.strftime("%Y-%m-%d")
@@ -153,7 +227,7 @@ def main():
         d = agora.strftime("%Y-%m-%d")
         params["StartDate"] = d
         params["EndDate"] = d
-        range_label = f"StartDate=EndDate={d} UTC (so dia civil atual; recomendado vs Last24h na consola)"
+        range_label = f"StartDate=EndDate={d} UTC (dia civil atual; subestima Last 24h rolante na maior parte do dia)"
     elif strategy == "start_utc_day":
         d = (agora - timedelta(hours=hours)).strftime("%Y-%m-%d")
         params["StartDate"] = d
@@ -181,8 +255,11 @@ def main():
         if pick and pick not in acc["nome"].lower():
             continue
         try:
-            recs = fetch_usage_records_url(acc["sid"], acc["token"], path_suffix, dict(params))
-            s = summarize(recs)
+            if strategy == "rolling_24h_proxy":
+                s = blended_headline_billing(acc["sid"], acc["token"], agora, hours)
+            else:
+                recs = fetch_usage_records_url(acc["sid"], acc["token"], path_suffix, dict(params))
+                s = summarize(recs)
         except Exception as e:
             print(f"**{acc['nome']}** ERRO: {e}\n")
             continue
@@ -253,10 +330,11 @@ def main():
         print(f"CSV: {path}")
 
     print(
-        "---\nBilling 'Last 24 hours' na consola e rolante; a API Usage so aceita dias GMT (StartDate/EndDate).\n"
-        "- end_utc_day: so dia civil UTC atual — costuma aproximar **Total Spend**; para SMS Transactions compare **usage** (segmentos) com o card.\n"
-        "- cover_days / twilio_offsets: intervalo mais largo — infla totais vs 'Last 24h'.\n"
-        "- Para bater ao minuto com a consola, use export oficial ou alinhe o filtro da consola a **um dia UTC** e use USAGE_UTC_DAY=AAAA-MM-DD."
+        "---\n"
+        "Default rolling_24h_proxy: Daily + mistura por hora (~Last 24h Insights); nao e a mesma logica interna da consola.\n"
+        "- Total Spend / SMS Spend: **TotalPrice_Totalprice** / **SMS_Price** (e SMS_Count / SMS_Usage para transacoes).\n"
+        "- twilio_offsets soma **dois dias GMT completos** — em geral **acima** do card Last 24h.\n"
+        "- USAGE_UTC_DAY forca um dia fixo. Export Twilio para conciliacao ao centimo."
     )
     return 0
 

@@ -1,4 +1,4 @@
-# Snapshot Billing (Usage Records API) — alinha com Account Insights (dias GMT).
+# Snapshot Billing — default rolling_24h_proxy (Daily + blend horario ~Last 24h Insights; ver script).
 # Gera conf_usage_billing_snapshot.csv para o dashboard / Lovable.
 name: Billing — Usage snapshot (Twilio)
 
@@ -9,13 +9,14 @@ on:
   workflow_dispatch:
     inputs:
       usage_date_strategy:
-        description: "end_utc_day=dia civil UTC atual (default). cover_days=intersecao rolling em dias GMT. twilio_offsets=StartDate -1days. today_subresource=Today.json"
+        description: "rolling_24h_proxy=Daily+blend horario (~Last 24h). end_utc_day=dia UTC. twilio_offsets=2 dias GMT inteiros. cover_days / today / start_utc_day"
         type: choice
-        default: end_utc_day
+        default: rolling_24h_proxy
         options:
+          - rolling_24h_proxy
           - end_utc_day
-          - cover_days
           - twilio_offsets
+          - cover_days
           - today_subresource
           - start_utc_day
       usage_utc_day:
@@ -33,7 +34,7 @@ concurrency:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   USAGE_WRITE_CSV: "1"
-  USAGE_DATE_STRATEGY: end_utc_day
+  USAGE_DATE_STRATEGY: rolling_24h_proxy
   USAGE_SNAPSHOT_HOURS: "24"
   PYTHONUNBUFFERED: "1"
 
@@ -69,7 +70,7 @@ jobs:
         run: |
           export USAGE_WRITE_CSV=1
           export USAGE_SNAPSHOT_HOURS=24
-          export USAGE_DATE_STRATEGY="end_utc_day"
+          export USAGE_DATE_STRATEGY="rolling_24h_proxy"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             STRAT="${{ github.event.inputs.usage_date_strategy }}"
             DAY="${{ github.event.inputs.usage_utc_day }}"
