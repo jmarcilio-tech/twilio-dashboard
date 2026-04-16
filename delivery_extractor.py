@@ -15,6 +15,10 @@ load_dotenv()
 csv_stats = "conf_delivery_stats.csv"
 csv_horario = "conf_delivery_horario.csv"
 STATE_PATH = os.getenv("DELIVERY_STATE_FILE", "delivery_sync_state.json")
+# outbound = só saída (Messaging Insights com Outgoing). all = todas as direções (legado).
+DELIVERY_DIRECTION = os.getenv("DELIVERY_DIRECTION", "outbound").strip().lower()
+if DELIVERY_DIRECTION not in ("outbound", "all"):
+    DELIVERY_DIRECTION = "outbound"
 
 # Categorias alinhadas ao painel "Total Outgoing Messages" (Delivery & Errors)
 CATEGORIAS = [
@@ -41,6 +45,15 @@ def empty_stats():
 
 def empty_bucket():
     return {k: 0 for k in CATEGORIAS}
+
+
+def mensagem_conta_para_extracao(m: dict) -> bool:
+    """True se a mensagem entra na soma (alinhado ao filtro Outgoing da consola)."""
+    if DELIVERY_DIRECTION == "all":
+        return True
+    d = (m.get("direction") or "").strip().lower()
+    # Twilio: inbound | outbound-api | outbound-call | outbound-reply
+    return d.startswith("outbound")
 
 
 def classificar_status(status_raw: str) -> str:
@@ -205,6 +218,8 @@ def processar_conta(acc):
                 print(f"… {nome}: página {pagina}")
 
             for m in body.get("messages", []):
+                if not mensagem_conta_para_extracao(m):
+                    continue
                 status = m.get("status", "unknown")
                 chave = classificar_status(status)
                 sent_at = m.get("date_sent") or m.get("date_created", "")
@@ -244,7 +259,8 @@ def processar_conta(acc):
 migrar_horario_se_schema_antigo()
 
 print(
-    f"🚀 Delivery | modo={FETCH_MODE} | janela_label={JANELA_LABEL} | DateSent>={FILTRO_INICIO} UTC | agora={AGORA.strftime('%Y-%m-%dT%H:%M:%SZ')} | {len(accounts)} contas"
+    f"🚀 Delivery | modo={FETCH_MODE} | direção={DELIVERY_DIRECTION} | janela_label={JANELA_LABEL} | "
+    f"DateSent>={FILTRO_INICIO} UTC | agora={AGORA.strftime('%Y-%m-%dT%H:%M:%SZ')} | {len(accounts)} contas"
 )
 
 with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
@@ -258,7 +274,7 @@ EXTRAIDO_EM = AGORA.strftime("%Y-%m-%d %H:%M UTC")
 
 # --- conf_delivery_stats.csv ---
 header_stats = (
-    ["Conta", "Categoria", "Janela", "Modo", "Mensagens", "Segmentos"]
+    ["Conta", "Categoria", "Janela", "Modo", "Direcao", "Mensagens", "Segmentos"]
     + CATEGORIAS
     + ["Taxa_Entrega_%", "Extraido_Em"]
 )
@@ -271,6 +287,7 @@ with open(csv_stats, "w", newline="", encoding="utf-8") as f:
             r["cat"],
             JANELA_LABEL,
             FETCH_MODE,
+            DELIVERY_DIRECTION,
             r["stats_msg"]["Total"],
             r["stats_seg"]["Total"],
         ]
@@ -306,6 +323,7 @@ print(f"📄 {csv_horario} — {len(novas_horario)} slot(s) novo(s)")
 new_state = dict(state)
 new_state["last_run_utc"] = AGORA.strftime("%Y-%m-%dT%H:%M:%SZ")
 new_state["last_fetch_mode"] = FETCH_MODE
+new_state["delivery_direction"] = DELIVERY_DIRECTION
 if FETCH_MODE == "baseline_mes":
     if alguma_api_ok:
         new_state["baseline_month"] = cur_month

@@ -29,6 +29,8 @@ env:
   DELIVERY_JANELA_HORAS: "0.25"
   # auto: baseline mensal 1× por mês (ficheiro no repo); depois incremental. Dispatch permite baseline_24h.
   DELIVERY_FETCH_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.delivery_fetch_mode || 'auto' }}
+  # outbound = mesmo recorte que Messaging Insights → Delivery & Errors → Outgoing
+  DELIVERY_DIRECTION: outbound
 
 jobs:
 
