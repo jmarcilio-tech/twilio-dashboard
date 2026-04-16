@@ -30,8 +30,8 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   # Janela só em modo incremental (5 min). Baseline mensal/24h ignora isto para o DateSent>.
   DELIVERY_JANELA_HORAS: "0.0833333333"
-  # workflow_dispatch pode forçar modo; scheduler externo usa incremental para máxima previsibilidade.
-  DELIVERY_FETCH_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.delivery_fetch_mode || (github.event_name == 'repository_dispatch' && 'incremental' || 'auto') }}
+  # Modo base; será ajustado em runtime por evento.
+  DELIVERY_FETCH_MODE: "auto"
   # outbound = mesmo recorte que Messaging Insights → Delivery & Errors → Outgoing
   DELIVERY_DIRECTION: outbound
 
@@ -55,6 +55,20 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+      - name: ⚙️ Definir modo de coleta por evento
+        run: |
+          MODE="${DELIVERY_FETCH_MODE}"
+          if [ "$GITHUB_EVENT_NAME" = "repository_dispatch" ]; then
+            MODE="incremental"
+          fi
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            INPUT_MODE="$(jq -r '.inputs.delivery_fetch_mode // ""' "$GITHUB_EVENT_PATH")"
+            if [ -n "$INPUT_MODE" ]; then
+              MODE="$INPUT_MODE"
+            fi
+          fi
+          echo "DELIVERY_FETCH_MODE=$MODE" >> "$GITHUB_ENV"
+          echo "Modo de coleta definido: $MODE"
       - run: pip install -r requirements.txt
       - name: 📡 Extrator Delivery & Errors
         env:
