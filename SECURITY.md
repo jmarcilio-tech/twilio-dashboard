@@ -15,6 +15,16 @@ Se o repositório for **público**, recomenda-se fortemente:
 
 Se `EXTERNAL_DISPATCH_TOKEN` **não** estiver definido, o comportamento permanece compatível com dispatches antigos (sem `client_payload`), com menor proteção.
 
+### Gerar e configurar o token (Windows)
+
+No clone do repositório:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-dispatch-secret.ps1
+```
+
+Depois siga as instruções no ecrã: cola o valor no secret `EXTERNAL_DISPATCH_TOKEN` no GitHub e define `TWILIO_REPO_DISPATCH_SECRET` com `setx` (mesmo valor). Apaga o ficheiro temporário indicado.
+
 ## Reportar vulnerabilidade
 
 Abra um issue privado ou contacte o mantenedor do repositório com detalhes para reprodução e impacto. Não publique credenciais em issues públicos.
