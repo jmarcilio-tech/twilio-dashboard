@@ -159,7 +159,7 @@ accounts = [
 ]
 
 AGORA = utc_now()
-JANELA_HORAS = float(os.getenv("DELIVERY_JANELA_HORAS", "0.25"))
+JANELA_HORAS = float(os.getenv("DELIVERY_JANELA_HORAS", "0.0833333333"))
 FETCH_MODE_RAW = os.getenv("DELIVERY_FETCH_MODE", "incremental").strip().lower()
 state = load_state()
 cur_month = AGORA.strftime("%Y-%m")
