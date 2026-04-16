@@ -1,0 +1,114 @@
+# Varredura diária: desde 00:00 UTC de ontem até agora + append ao histórico (série temporal / DB).
+# Não substitui o job de 5 min (delivery-only.yml); corre 1×/dia com janela larga.
+name: Delivery — varredura ontem → agora (diário)
+
+on:
+  schedule:
+    # 07:45 UTC: já fechou "ontem" em quase todo o mundo UTC.
+    - cron: "45 7 * * *"
+  workflow_dispatch:
+    inputs:
+      delivery_list_mode:
+        description: "sent=mais rápido. activity=mais páginas API (pode precisar subir DELIVERY_ACTIVITY_MAX_PAGES)."
+        type: choice
+        default: sent
+        options:
+          - sent
+          - activity
+
+permissions:
+  contents: write
+
+concurrency:
+  group: twilio-delivery-sweep-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  DELIVERY_FETCH_MODE: incremental
+  DELIVERY_WINDOW_PRESET: since_yesterday_utc
+  DELIVERY_APPEND_STATS_HISTORY: "1"
+  DELIVERY_DIRECTION: outbound
+  DELIVERY_LIST_MODE: sent
+  DELIVERY_JANELA_HORAS: "0.0833333333"
+  DELIVERY_ACTIVITY_MAX_PAGES: "200"
+  DELIVERY_ACTIVITY_STOP_EMPTY: "5"
+  # Não sobrescrever conf_delivery_stats.csv / horário (job de 5 min mantém o snapshot atual).
+  DELIVERY_STATS_WRITE_SNAPSHOT: "0"
+  DELIVERY_SKIP_HORARIO: "1"
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Modo lista (manual)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          LM="$(jq -r '.inputs.delivery_list_mode // "sent"' "$GITHUB_EVENT_PATH")"
+          echo "DELIVERY_LIST_MODE=$LM" >> "$GITHUB_ENV"
+          echo "Lista API: $LM"
+      - run: pip install -r requirements.txt
+      - name: Extrator (varredura + histórico)
+        env:
+          DELIVERY_FETCH_MODE: ${{ env.DELIVERY_FETCH_MODE }}
+          DELIVERY_WINDOW_PRESET: ${{ env.DELIVERY_WINDOW_PRESET }}
+          DELIVERY_APPEND_STATS_HISTORY: ${{ env.DELIVERY_APPEND_STATS_HISTORY }}
+          DELIVERY_DIRECTION: ${{ env.DELIVERY_DIRECTION }}
+          DELIVERY_LIST_MODE: ${{ env.DELIVERY_LIST_MODE }}
+          DELIVERY_JANELA_HORAS: ${{ env.DELIVERY_JANELA_HORAS }}
+          DELIVERY_ACTIVITY_MAX_PAGES: ${{ env.DELIVERY_ACTIVITY_MAX_PAGES }}
+          DELIVERY_ACTIVITY_STOP_EMPTY: ${{ env.DELIVERY_ACTIVITY_STOP_EMPTY }}
+          DELIVERY_STATS_WRITE_SNAPSHOT: ${{ env.DELIVERY_STATS_WRITE_SNAPSHOT }}
+          DELIVERY_SKIP_HORARIO: ${{ env.DELIVERY_SKIP_HORARIO }}
+          RECUPERACAO_NS_SID: ${{ secrets.RECUPERACAO_NS_SID }}
+          RECUPERACAO_NS_TOKEN: ${{ secrets.RECUPERACAO_NS_TOKEN }}
+          BROADCAST_JOAO_SID: ${{ secrets.BROADCAST_JOAO_SID }}
+          BROADCAST_JOAO_TOKEN: ${{ secrets.BROADCAST_JOAO_TOKEN }}
+          BROADCAST_BERNARDO_SID: ${{ secrets.BROADCAST_BERNARDO_SID }}
+          BROADCAST_BERNARDO_TOKEN: ${{ secrets.BROADCAST_BERNARDO_TOKEN }}
+          BROADCAST_RAFA_SID: ${{ secrets.BROADCAST_RAFA_SID }}
+          BROADCAST_RAFA_TOKEN: ${{ secrets.BROADCAST_RAFA_TOKEN }}
+          STANDBY_HAVEN_SID: ${{ secrets.STANDBY_HAVEN_SID }}
+          STANDBY_HAVEN_TOKEN: ${{ secrets.STANDBY_HAVEN_TOKEN }}
+          STANDBY_REHABLEAF_SID: ${{ secrets.STANDBY_REHABLEAF_SID }}
+          STANDBY_REHABLEAF_TOKEN: ${{ secrets.STANDBY_REHABLEAF_TOKEN }}
+          STANDBY_RICHARD_SID: ${{ secrets.STANDBY_RICHARD_SID }}
+          STANDBY_RICHARD_TOKEN: ${{ secrets.STANDBY_RICHARD_TOKEN }}
+          STANDBY_NATUREMOVE_SID: ${{ secrets.STANDBY_NATUREMOVE_SID }}
+          STANDBY_NATUREMOVE_TOKEN: ${{ secrets.STANDBY_NATUREMOVE_TOKEN }}
+        run: python delivery_extractor.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csv-delivery-sweep
+          if-no-files-found: warn
+          path: |
+            conf_delivery_stats_history.csv
+
+  commitar-sweep:
+    runs-on: ubuntu-latest
+    needs: [sweep]
+    concurrency:
+      group: twilio-delivery-sweep-commit-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: csv-delivery-sweep
+      - name: Commitar só o histórico (delivery_sync_state fica com o job de 5 min)
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          if [ -f conf_delivery_stats_history.csv ]; then cp conf_delivery_stats_history.csv /tmp/conf_delivery_stats_history.csv; fi
+          git fetch origin master
+          git reset --hard origin/master
+          if [ -f /tmp/conf_delivery_stats_history.csv ]; then cp /tmp/conf_delivery_stats_history.csv conf_delivery_stats_history.csv; fi
+          if [ -f conf_delivery_stats_history.csv ]; then git add conf_delivery_stats_history.csv; fi
+          git diff --staged --quiet || git commit -m "chore: delivery varredura diaria append historico [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push origin master

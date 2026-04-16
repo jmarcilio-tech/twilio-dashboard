@@ -17,6 +17,13 @@ on:
           - incremental
           - baseline_mes
           - baseline_24h
+      delivery_list_mode:
+        description: "sent=DateSent> (rápido). activity=janela date_sent|date_created (aprox. Insights, todas as contas)"
+        type: choice
+        default: activity
+        options:
+          - sent
+          - activity
 
 permissions:
   contents: write
@@ -34,11 +41,13 @@ env:
   DELIVERY_FETCH_MODE: "auto"
   # outbound = mesmo recorte que Messaging Insights → Delivery & Errors → Outgoing
   DELIVERY_DIRECTION: outbound
+  # Uma variável aplica-se a todas as contas no delivery_extractor (NS, Joao, …).
+  DELIVERY_LIST_MODE: activity
 
 jobs:
   delivery:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 10
     steps:
       - name: 🔐 Validar token do scheduler externo
         env:
@@ -73,6 +82,11 @@ jobs:
             if [ -n "$INPUT_MODE" ]; then
               MODE="$INPUT_MODE"
             fi
+            INPUT_LM="$(jq -r '.inputs.delivery_list_mode // ""' "$GITHUB_EVENT_PATH")"
+            if [ -n "$INPUT_LM" ] && [ "$INPUT_LM" != "null" ]; then
+              echo "DELIVERY_LIST_MODE=$INPUT_LM" >> "$GITHUB_ENV"
+              echo "Lista API definida: $INPUT_LM"
+            fi
           fi
           echo "DELIVERY_FETCH_MODE=$MODE" >> "$GITHUB_ENV"
           echo "Modo de coleta definido: $MODE"
@@ -82,6 +96,7 @@ jobs:
           DELIVERY_JANELA_HORAS: ${{ env.DELIVERY_JANELA_HORAS }}
           DELIVERY_FETCH_MODE: ${{ env.DELIVERY_FETCH_MODE }}
           DELIVERY_DIRECTION: ${{ env.DELIVERY_DIRECTION }}
+          DELIVERY_LIST_MODE: ${{ env.DELIVERY_LIST_MODE }}
           RECUPERACAO_NS_SID: ${{ secrets.RECUPERACAO_NS_SID }}
           RECUPERACAO_NS_TOKEN: ${{ secrets.RECUPERACAO_NS_TOKEN }}
           BROADCAST_JOAO_SID: ${{ secrets.BROADCAST_JOAO_SID }}
