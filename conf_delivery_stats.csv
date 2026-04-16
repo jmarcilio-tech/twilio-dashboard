@@ -1,5 +1,2 @@
-Conta,Categoria,Janela,Modo,Mensagens,Segmentos,Delivered,Failed,Undelivered,Sent,Sending,Delivery_Unknown,Accepted,Queued,Taxa_Entrega_%,Extraido_Em
-NS,Recuperação,15min,incremental,27,53,47,0,4,0,0,2,0,0,88.68,2026-04-16 10:45 UTC
-Joao,Broadcast,15min,incremental,6,6,0,0,0,0,0,6,0,0,0.0,2026-04-16 10:45 UTC
-Bernardo,Broadcast,15min,incremental,10,12,0,0,0,0,0,12,0,0,0.0,2026-04-16 10:45 UTC
-Havenmove,Standby,15min,incremental,2,2,0,0,0,0,0,2,0,0,0.0,2026-04-16 10:45 UTC
+Conta,Categoria,Janela,Modo,Direcao,Mensagens,Segmentos,Delivered,Failed,Undelivered,Sent,Sending,Delivery_Unknown,Accepted,Queued,Taxa_Entrega_%,Extraido_Em
+NS,Recuperação,15min,incremental,outbound,33,70,66,0,0,4,0,0,0,0,94.29,2026-04-16 11:39 UTC
