@@ -1,6 +1,9 @@
-Conta,Categoria,Janela,Modo,Direcao,Mensagens,Segmentos,Delivered,Failed,Undelivered,Sent,Sending,Delivery_Unknown,Accepted,Queued,Taxa_Entrega_%,Extraido_Em
-NS,Recuperação,4min,incremental,outbound,17,33,31,0,0,2,0,0,0,0,93.94,2026-04-16 20:21 UTC
-Joao,Broadcast,4min,incremental,outbound,17747,17766,12789,4082,451,444,0,0,0,0,71.99,2026-04-16 20:21 UTC
-Bernardo,Broadcast,4min,incremental,outbound,6846,6853,4657,1875,153,168,0,0,0,0,67.96,2026-04-16 20:21 UTC
-Richard,Standby,4min,incremental,outbound,6,14,14,0,0,0,0,0,0,0,100.0,2026-04-16 20:21 UTC
-Naturemove,Standby,4min,incremental,outbound,6011,7704,7062,51,258,333,0,0,0,0,91.67,2026-04-16 20:21 UTC
+Conta,Categoria,Janela,Modo,Direcao,List_Mode,Mensagens,Segmentos,Delivered,Failed,Undelivered,Sent,Sending,Delivery_Unknown,Accepted,Queued,Taxa_Entrega_%,Insight_Delivered_Msgs,Insight_Failed_Msgs,Insight_Delivery_Unknown_Msgs,Insight_Undelivered_Msgs,Insight_Sent_Msgs,Insight_Total_Msgs,Api_Pages,Api_Pages_Capped,Agregado_Ate_Utc,Github_Run_Id,Extraido_Em
+Bernardo,Broadcast,4min,incremental,outbound,activity,6197,6199,4171,1710,149,158,0,0,11,0,67.29,4169,1710,11,149,158,6197,12,0,2026-04-16T20:26:13Z,24532256701,2026-04-16 20:26 UTC
+Havenmove,Standby,4min,incremental,outbound,activity,0,0,0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,5,0,2026-04-16T20:26:13Z,24532256701,2026-04-16 20:26 UTC
+Joao,Broadcast,4min,incremental,outbound,activity,17122,17135,12297,3969,413,448,0,0,8,0,71.77,12286,3969,8,412,447,17122,23,0,2026-04-16T20:26:13Z,24532256701,2026-04-16 20:26 UTC
+NS,Recuperação,4min,incremental,outbound,activity,9,23,23,0,0,0,0,0,0,0,100.0,9,0,0,0,0,9,6,0,2026-04-16T20:26:13Z,24532256701,2026-04-16 20:26 UTC
+Naturemove,Standby,4min,incremental,outbound,activity,12191,15684,7462,45,306,297,0,0,0,7574,47.58,5791,45,5885,236,234,12191,26,0,2026-04-16T20:26:13Z,24532256701,2026-04-16 20:26 UTC
+Rafa,Broadcast,4min,incremental,outbound,activity,0,0,0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,5,0,2026-04-16T20:26:13Z,24532256701,2026-04-16 20:26 UTC
+Rehableaf,Standby,4min,incremental,outbound,activity,0,0,0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,1,0,2026-04-16T20:26:13Z,24532256701,2026-04-16 20:26 UTC
+Richard,Standby,4min,incremental,outbound,activity,2,5,5,0,0,0,0,0,0,0,100.0,2,0,0,0,0,2,6,0,2026-04-16T20:26:13Z,24532256701,2026-04-16 20:26 UTC
