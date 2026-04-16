@@ -23,6 +23,7 @@
 | Saldos | `saldo_extractor.py` + `.github/workflows/main.yml` | `conf_saldos.csv` |
 | Delivery (rápido ~5 min) | `delivery_extractor.py` + `.github/workflows/delivery-only.yml` | `conf_delivery_stats.csv`, `conf_delivery_horario.csv`, `delivery_sync_state.json` |
 | Delivery (varredura diária) | mesmo script + `.github/workflows/delivery-sweep-daily.yml` | append a `conf_delivery_stats_history.csv` (não substitui o snapshot nem o horário) |
+| Delivery Insights (Past N h, consola) | `scripts/fetch_delivery_insights_snapshot.py` + `.github/workflows/delivery-insights-4h.yml` | `conf_delivery_insights_4h.csv` (mensagens + segmentos; `activity` + outbound) |
 | Billing / Usage API | `scripts/fetch_usage_billing_snapshot.py` + `.github/workflows/usage-billing-snapshot.yml` | `conf_usage_billing_snapshot.csv` |
 
 ---
@@ -54,6 +55,7 @@
 | Unidade principal | **Segmentos** (`num_segments`) por estado — alinhado ao painel quando a consola usa segmentos |
 | Colunas de estado | Delivered, Failed, Undelivered, Sent, Sending, Delivery_Unknown, Accepted, Queued |
 | CSV snapshot | `conf_delivery_stats.csv` — inclui `Modo`, `Direcao`, `Extraido_Em`, totais por conta |
+| CSV Insights (Past 4h) | `conf_delivery_insights_4h.csv` — colunas `Insight_*` (mensagens, legenda 5 estados) + `*_Seg`; alinhado à aba **Delivery & Errors** da consola (aprox. REST) |
 | CSV horário | `conf_delivery_horario.csv` — slots **15 min UTC**; append com dedupe `(Slot_15min, Conta)` |
 | Migração | Schema antigo de horário → renomeado para `conf_delivery_horario_legacy.csv` quando aplicável |
 
@@ -65,6 +67,7 @@
 |----------|----------|----------|--------|
 | Delivery | `delivery-only.yml` | `schedule`, `repository_dispatch` (`delivery_tick`), `workflow_dispatch` | ~5 min; commit de stats + horário + estado; CI pode usar `DELIVERY_LIST_MODE` (ex.: `activity`) |
 | Delivery varredura | `delivery-sweep-daily.yml` | `schedule`, `workflow_dispatch` | Janela `since_yesterday_utc`; append histórico; `DELIVERY_STATS_WRITE_SNAPSHOT=0` |
+| Delivery Insights 4h | `delivery-insights-4h.yml` | `schedule` (2×/h UTC), `workflow_dispatch` | Gera/commit `conf_delivery_insights_4h.csv`; inputs `insights_hours`, `list_mode` |
 | Billing Usage | `usage-billing-snapshot.yml` | `schedule` (4×/dia UTC), `workflow_dispatch` | Gera/commit `conf_usage_billing_snapshot.csv`; estratégia de datas via inputs/env |
 | Financeiro + Saldos | `main.yml` | `schedule`, `workflow_dispatch` | Frequência menor; não corre delivery |
 
@@ -111,7 +114,8 @@
 
 | Ecrã / métrica | Ficheiro único | Nunca misturar com |
 |----------------|----------------|---------------------|
-| **Outgoing / delivery ao vivo** (Messaging Insights, ~janela do job) | `conf_delivery_stats.csv` | Não somar `conf_delivery_horario.csv` para o mesmo “headline total”; não usar `conf_delivery_stats_history.csv` como número atual |
+| **Outgoing / operação rápida (~5 min)** | `conf_delivery_stats.csv` | Não somar `conf_delivery_horario.csv` para o mesmo “headline total”; não usar `conf_delivery_stats_history.csv` como número atual |
+| **Delivery & Errors (Past 4h, consola)** | `conf_delivery_insights_4h.csv` | Não usar `conf_delivery_stats.csv` para os mesmos cartões (janela e API diferentes); ver colunas `Insight_*` e `Insights_Hours` |
 | **Gráfico 15 min / heatmap dia** | `conf_delivery_horario.csv` (slots UTC) | Não usar como substituto do total da consola sem filtrar o dia e sem clarificar que é série agregada por slot |
 | **Série / tendência larga** (ontem 00:00 UTC → agora, append diário) | `conf_delivery_stats_history.csv` | Não apresentar como snapshot “agora”; cada linha é uma execução/janela gravada no histórico |
 | **Total Spend / SMS (~Last 24h Insights)** | `conf_usage_billing_snapshot.csv` | Default **rolling_24h_proxy** (Usage Daily + mistura por hora; ver coluna `Range`). **SMS_Usage** costuma aproximar “SMS Transactions” melhor que `SMS_Count`. Não misturar com delivery |
@@ -120,13 +124,17 @@
 **Regras de leitura**
 
 - Usar **nomes de colunas** (cabeçalho CSV), não índices fixos — o schema pode evoluir.
-- **Segmentos** vs **mensagens**: no delivery, estados principais (`Delivered`, `Failed`, …) são por **segmentos**; colunas `Insight_*` são contagens por **mensagem** (legenda “Delivery & Errors” aproximada).
+- **Segmentos** vs **mensagens**: em `conf_delivery_stats.csv` os estados principais são por **segmentos**; `Insight_*` são por **mensagem**. Em **`conf_delivery_insights_4h.csv`** use `Insight_*` para a legenda **Delivery & Errors** (mensagens) e `*_Seg` para volume em segmentos.
 - Mostrar sempre **UTC** na UI quando a fonte for UTC (`Extraido_Em`, `Agregado_Ate_Utc`, `Slot_15min`, `Extraido_Utc` no billing).
 - Se `Api_Pages_Capped` = 1, avisar que a lista API pode estar truncada (modo `activity`); sugerir revisão operacional, não “corrigir” números no cliente.
 
 **Cabeçalho `conf_delivery_stats.csv` / histórico** (mesmo schema):
 
 `Conta`, `Categoria`, `Janela`, `Modo`, `Direcao`, `List_Mode`, `Mensagens`, `Segmentos`, + estados (`Delivered` … `Queued`), `Taxa_Entrega_%`, `Insight_Delivered_Msgs`, `Insight_Failed_Msgs`, `Insight_Delivery_Unknown_Msgs`, `Insight_Undelivered_Msgs`, `Insight_Sent_Msgs`, `Insight_Total_Msgs`, `Api_Pages`, `Api_Pages_Capped`, `Agregado_Ate_Utc`, `Github_Run_Id`, `Extraido_Em`.
+
+**Cabeçalho `conf_delivery_insights_4h.csv`** (snapshot Insights; uma linha por conta):
+
+`Conta`, `Categoria`, `Insights_Hours`, `List_Mode`, `Direcao`, `Janela_Inicio_Utc`, `Janela_Fim_Utc`, `Insight_Delivered_Msgs`, `Insight_Failed_Msgs`, `Insight_Undelivered_Msgs`, `Insight_Sent_Msgs`, `Insight_Delivery_Unknown_Msgs`, `Insight_Total_Msgs`, `Mensagens`, `Segmentos`, `Delivered_Seg` … `Queued_Seg`, `Api_Pages`, `Api_Pages_Capped`, `Github_Run_Id`, `Extraido_Utc`.
 
 **Cabeçalho `conf_usage_billing_snapshot.csv`:**
 
@@ -145,6 +153,7 @@ Atualiza o Twilio Intelligence Dashboard para consumir os CSVs do GitHub e alinh
 ## URLs raw (branch master)
 Base: https://raw.githubusercontent.com/jmarcilio-tech/twilio-dashboard/master/
 - conf_delivery_stats.csv
+- conf_delivery_insights_4h.csv
 - conf_delivery_horario.csv
 - conf_delivery_stats_history.csv
 - conf_usage_billing_snapshot.csv
@@ -152,38 +161,27 @@ Base: https://raw.githubusercontent.com/jmarcilio-tech/twilio-dashboard/master/
 (opcional financeiro: conf_total_marco.csv, conf_detalhado_marco.csv, conf_saldos.csv)
 
 ## Regra de ouro — UMA fonte por ecrã
-1) Messaging / outgoing “ao vivo”: SÓ conf_delivery_stats.csv (snapshot ~5 min). Coluna Janela descreve a janela. NÃO somar conf_delivery_horario.csv para o mesmo headline total.
-2) Gráfico 15 min UTC: conf_delivery_horario.csv (Slot_15min, segmentos por estado, Total_Slot).
-3) Tendência longa (varredura diária): conf_delivery_stats_history.csv — append; NÃO usar como “valor agora” sem filtrar por Extraido_Em / Github_Run_Id.
-4) Account Insights / Billing (~Last 24h): SÓ conf_usage_billing_snapshot.csv. O pipeline usa estratégia rolling_24h_proxy (Usage Daily + mistura por hora na janela UTC; ver coluna Range). NÃO misturar com delivery.
-5) Saúde do pipeline: delivery_sync_state.json (metadados).
+1) Operação / snapshot rápido (~5 min, pipeline delivery): SÓ conf_delivery_stats.csv. Coluna Janela descreve a janela. NÃO somar conf_delivery_horario.csv para o mesmo headline total.
+2) Aba estilo Twilio “SMS > Insights > Delivery & Errors” (Past 4 hours, Outgoing, contagens por mensagem na legenda de 5 estados): SÓ conf_delivery_insights_4h.csv. Ler Insights_Hours (ex. 4), Janela_Inicio_Utc / Janela_Fim_Utc, Extraido_Utc. Cartões Total Outgoing / Delivered / Failed / Undelivered / Sent / Delivery Unknown → colunas Insight_Delivered_Msgs, Insight_Failed_Msgs, Insight_Undelivered_Msgs, Insight_Sent_Msgs, Insight_Delivery_Unknown_Msgs, Insight_Total_Msgs. Para volume em segmentos usar Delivered_Seg, Failed_Seg, … ou coluna Segmentos. NÃO usar conf_delivery_stats.csv para estes mesmos cartões (janela e definição diferentes).
+3) Gráfico 15 min UTC: conf_delivery_horario.csv (Slot_15min, segmentos por estado, Total_Slot).
+4) Tendência longa (varredura diária): conf_delivery_stats_history.csv — append; NÃO usar como “valor agora” sem filtrar por Extraido_Em / Github_Run_Id.
+5) Account Insights / Billing (~Last 24h): SÓ conf_usage_billing_snapshot.csv (default rolling_24h_proxy; coluna Range). NÃO misturar com delivery.
+6) Saúde do pipeline: delivery_sync_state.json (metadados).
 
-## Atualizar cartões da área Billing (substituir mapeamentos antigos)
-Ler por nome de coluna (nunca por índice fixo). Filtrar linha por Conta (excluir __ORG_SUM__ para vista por conta).
-
-Mapeamento para os cards estilo “Account Insights — Last 24 hours” (UTC):
-- Total Spend → coluna TotalPrice_Totalprice (string numérica USD).
-- Programmable SMS Spend → coluna SMS_Price.
-- SMS Transactions → coluna SMS_Usage (valor principal no ecrã). Mostrar também SMS_Count como “mensagens (count)” ou tooltip secundário — o card da consola pode aproximar-se mais de Usage do que de Count.
-
-Sempre mostrar:
-- Coluna Range (ex.: texto com “rolling_24h_proxy”) num subtítulo ou badge: “Aprox. Last 24h (API GMT + blend)”.
-- Extraido_Utc do CSV como “Atualizado em … UTC”.
-
-## Delivery (inalterado na lógica de fonte)
-- Segmentos: colunas Delivered, Failed, … no snapshot.
-- Mensagens (Insight): colunas Insight_*.
-- Api_Pages_Capped = 1 → aviso de possível truncagem.
+## Billing — cartões “Last 24 hours”
+- Total Spend → TotalPrice_Totalprice
+- Programmable SMS Spend → SMS_Price
+- SMS Transactions → SMS_Usage (principal); SMS_Count como secundário/tooltip
+- Badge: texto da coluna Range + “Aprox. Last 24h (API GMT + blend)”
 
 ## Implementação técnica
-- Fetch GET aos raw URLs; cache 60–120s; parse CSV com cabeçalho.
+- Fetch GET aos raw URLs; cache 60–120s; parse por cabeçalho.
 - Sem Twilio SDK nem secrets no browser.
-- Não expor credenciais.
 
 ## Não fazer
-- Misturar conf_delivery_horario + conf_delivery_stats num único KPI de total outgoing.
-- Tratar billing CSV como igual matemática à consola ao centavo (é proxy; Range explica o modelo).
-- Assumir SMS_Count = “SMS Transactions” da consola — priorizar SMS_Usage.
+- Misturar conf_delivery_insights_4h com conf_delivery_stats no mesmo conjunto de KPIs “Delivery & Errors”.
+- Misturar conf_delivery_horario + conf_delivery_stats num único headline de total outgoing.
+- Tratar billing ou insights CSV como paridade pixel-perfect com a consola (aproximações documentadas).
 ```
 
 ---

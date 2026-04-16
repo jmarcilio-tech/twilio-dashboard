@@ -40,6 +40,7 @@ A atualização dos dados é orquestrada via GitHub Actions com a seguinte polí
 | `conf_total_marco.csv` | Executivo / Diário | Gasto Total USD, Volume de SMS. |
 | `conf_detalhado_marco.csv` | Operacional / Categoria | Custos de Voz, IA, Lookups e Assinaturas. |
 | `conf_delivery_stats.csv` | Messaging / snapshot (~5 min) | Uma linha por conta: segmentos por estado, `List_Mode`, `Api_Pages*`, Insights por mensagem (`delivery-only.yml`). |
+| `conf_delivery_insights_4h.csv` | Messaging / Insights consola | Past N h (default 4), `activity` + outbound; colunas `Insight_*` + `*_Seg` (`delivery-insights-4h.yml`). |
 | `conf_delivery_horario.csv` | Messaging / série 15 min UTC | Slots agregados; não substitui o snapshot para o mesmo “total” da consola. |
 | `conf_delivery_stats_history.csv` | Messaging / append diário | Mesmo schema que stats; série longa (`delivery-sweep-daily.yml`). |
 | `conf_usage_billing_snapshot.csv` | Billing / Usage API | Default **rolling_24h_proxy** (~Account Insights Last 24h: Daily + blend por hora). Colunas `TotalPrice_Totalprice`, `SMS_Price`, `SMS_Count`, `SMS_Usage`; ver `Range`. |
