@@ -41,10 +41,17 @@ jobs:
     timeout-minutes: 4
     steps:
       - name: 🔐 Validar token do scheduler externo
-        if: ${{ github.event_name == 'repository_dispatch' && secrets.EXTERNAL_DISPATCH_TOKEN != '' }}
         env:
           EXPECTED_TOKEN: ${{ secrets.EXTERNAL_DISPATCH_TOKEN }}
         run: |
+          if [ "$GITHUB_EVENT_NAME" != "repository_dispatch" ]; then
+            echo "Evento $GITHUB_EVENT_NAME: validacao de token nao aplicavel."
+            exit 0
+          fi
+          if [ -z "$EXPECTED_TOKEN" ]; then
+            echo "EXTERNAL_DISPATCH_TOKEN nao configurado; mantendo compatibilidade sem token."
+            exit 0
+          fi
           PAYLOAD_TOKEN="$(jq -r '.client_payload.token // ""' "$GITHUB_EVENT_PATH")"
           if [ -z "$PAYLOAD_TOKEN" ] || [ "$PAYLOAD_TOKEN" != "$EXPECTED_TOKEN" ]; then
             echo "repository_dispatch rejeitado: token invalido ou ausente."
