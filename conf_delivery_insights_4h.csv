@@ -1,2 +1,9 @@
 Conta,Categoria,Insights_Hours,List_Mode,Direcao,Janela_Inicio_Utc,Janela_Fim_Utc,Insight_Delivered_Msgs,Insight_Failed_Msgs,Insight_Undelivered_Msgs,Insight_Sent_Msgs,Insight_Delivery_Unknown_Msgs,Insight_Total_Msgs,Mensagens,Segmentos,Delivered_Seg,Failed_Seg,Undelivered_Seg,Sent_Seg,Sending_Seg,Delivery_Unknown_Seg,Accepted_Seg,Queued_Seg,Api_Pages,Api_Pages_Capped,Github_Run_Id,Extraido_Utc
-NS,Recuperação,4.0,activity,outbound,2026-04-16T18:02:16Z,2026-04-16T22:02:16Z,927,37,24,11,0,999,999,2096,1979,37,54,26,0,0,0,0,7,0,,2026-04-16T22:02:16Z
+NS,Recuperação,4.0,activity,outbound,2026-04-16T18:04:36Z,2026-04-16T22:04:36Z,924,38,23,11,0,996,996,2086,1971,38,51,26,0,0,0,0,7,0,24536393573,2026-04-16T22:04:36Z
+Joao,Broadcast,4.0,activity,outbound,2026-04-16T18:04:36Z,2026-04-16T22:04:36Z,102251,22354,4027,3455,0,132087,132087,132171,102330,22354,4028,3459,0,0,0,0,138,0,24536393573,2026-04-16T22:04:36Z
+Bernardo,Broadcast,4.0,activity,outbound,2026-04-16T18:04:36Z,2026-04-16T22:04:36Z,66233,10212,2865,3129,0,82439,82439,90839,73845,10212,3211,3571,0,0,0,0,89,0,24536393573,2026-04-16T22:04:36Z
+Rafa,Broadcast,4.0,activity,outbound,2026-04-16T18:04:36Z,2026-04-16T22:04:36Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,24536393573,2026-04-16T22:04:36Z
+Havenmove,Standby,4.0,activity,outbound,2026-04-16T18:04:36Z,2026-04-16T22:04:36Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,24536393573,2026-04-16T22:04:36Z
+Rehableaf,Standby,4.0,activity,outbound,2026-04-16T18:04:36Z,2026-04-16T22:04:36Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,24536393573,2026-04-16T22:04:36Z
+Richard,Standby,4.0,activity,outbound,2026-04-16T18:04:36Z,2026-04-16T22:04:36Z,120012,8221,3109,2693,0,134035,134035,134333,120286,8221,3116,2710,0,0,0,0,150,1,24536393573,2026-04-16T22:04:36Z
+Naturemove,Standby,4.0,activity,outbound,2026-04-16T18:04:36Z,2026-04-16T22:04:36Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,24536393573,2026-04-16T22:04:36Z
