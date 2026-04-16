@@ -1,5 +1,10 @@
 # Variáveis de ambiente — NUNCA commitar
 .env
+.env.*
+
+# Logs locais (scripts de dispatch)
+logs/
+*.log
 
 # Cache Python
 __pycache__/

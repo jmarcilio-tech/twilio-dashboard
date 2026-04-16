@@ -24,6 +24,8 @@ O projeto adere aos princípios do *12-Factor App* para gestão de configuraçõ
 * **Zero-Config no Código:** Nenhuma credencial é armazenada no repositório.
 * **Injeção de Runtime:** As credenciais (Account SIDs e Auth Tokens) são injetadas em tempo de execução via **GitHub Repository Secrets**.
 * **Escopo de Permissões:** O workflow de CI/CD utiliza permissões granulares de escrita (`contents: write`) restritas aos datasets gerados.
+* **Dependabot:** atualizações semanais de dependências Python (`.github/dependabot.yml`).
+* **Política detalhada:** ver `SECURITY.md` (inclui endurecimento de `repository_dispatch`).
 
 ## 🚀 Pipeline de CI/CD
 
@@ -38,9 +40,27 @@ A atualização dos dados é orquestrada via GitHub Actions com dois workflows:
 O `schedule` do GitHub é *best effort*. Para maior previsibilidade da janela de 5 minutos, dispare o workflow de delivery por API:
 
 1. Crie um token no GitHub com permissão de repositório: **Actions (write)** e **Contents (read)**.
-2. Configure um scheduler externo para chamar a API a cada 5 minutos.
+2. (Recomendado, sobretudo em repo público) Crie o secret `EXTERNAL_DISPATCH_TOKEN` no GitHub com um valor aleatório longo.
+3. Configure um scheduler externo para chamar a API a cada 5 minutos.
 
-Exemplo de request:
+Scripts PowerShell versionados em `scripts/` (logs em `logs/`, ignorados pelo git):
+
+* `scripts/dispatch-delivery.ps1` — dispara `delivery_tick`.
+* `scripts/dispatch-delivery-watchdog.ps1` — reforço se o último run atrasar.
+
+Se definir o secret `EXTERNAL_DISPATCH_TOKEN` no GitHub, defina a mesma string na máquina do scheduler como variável de ambiente **`TWILIO_REPO_DISPATCH_SECRET`** (o script envia `client_payload.token`).
+
+Exemplo de request com token (recomendado):
+
+```bash
+curl -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer <GITHUB_TOKEN>" \
+  https://api.github.com/repos/jmarcilio-tech/twilio-dashboard/dispatches \
+  -d "{\"event_type\":\"delivery_tick\",\"client_payload\":{\"token\":\"<MESMO_VALOR_DO_SECRET>\"}}"
+```
+
+Exemplo mínimo (compatível apenas enquanto `EXTERNAL_DISPATCH_TOKEN` **não** estiver definido no GitHub):
 
 ```bash
 curl -X POST \
@@ -65,7 +85,7 @@ Para adicionar uma nova subconta ao monitoramento:
 
 1.  Insira as configurações de `sid`, `token`, `nome` e `categoria` no dicionário `accounts` dentro do script principal.
 2.  Configure os respectivos **Secrets** na interface do GitHub (`Settings > Secrets and variables > Actions`).
-3.  Mapeie as novas variáveis no arquivo `.github/workflows/main.yml`.
+3.  Mapeie as novas variáveis nos workflows `.github/workflows/main.yml` e `.github/workflows/delivery-only.yml`.
 
 ---
 *Mantido pela equipe de Engenharia / Data Ops.*

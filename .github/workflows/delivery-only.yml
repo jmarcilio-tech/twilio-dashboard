@@ -39,6 +39,8 @@ jobs:
   delivery:
     runs-on: ubuntu-latest
     timeout-minutes: 4
+    # Se EXTERNAL_DISPATCH_TOKEN estiver definido, repository_dispatch exige client_payload.token igual.
+    if: ${{ github.event_name != 'repository_dispatch' || secrets.EXTERNAL_DISPATCH_TOKEN == '' || (github.event.client_payload != null && github.event.client_payload.token == secrets.EXTERNAL_DISPATCH_TOKEN) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
