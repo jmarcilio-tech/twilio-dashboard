@@ -57,6 +57,7 @@
 | CSV snapshot | `conf_delivery_stats.csv` — inclui `Modo`, `Direcao`, `Extraido_Em`, totais por conta |
 | CSV Insights (Past 4h) | `conf_delivery_insights_4h.csv` — colunas `Insight_*` (mensagens, legenda 5 estados) + `*_Seg`; alinhado à aba **Delivery & Errors** da consola (aprox. REST) |
 | CSV horário | `conf_delivery_horario.csv` — slots **15 min UTC**; append com dedupe `(Slot_15min, Conta)` |
+| CSV Insights timeseries (15 min) | `conf_delivery_insights_timeseries.csv` — mensagens por slot (`Insight_*`), mesmo `Slot_15min` UTC que o horário; script `scripts/fetch_delivery_insights_timeseries.py` + workflow `delivery-insights-timeseries.yml` |
 | Migração | Schema antigo de horário → renomeado para `conf_delivery_horario_legacy.csv` quando aplicável |
 
 ---
@@ -68,6 +69,7 @@
 | Delivery | `delivery-only.yml` | `schedule`, `repository_dispatch` (`delivery_tick`), `workflow_dispatch` | ~5 min; commit de stats + horário + estado; CI pode usar `DELIVERY_LIST_MODE` (ex.: `activity`) |
 | Delivery varredura | `delivery-sweep-daily.yml` | `schedule`, `workflow_dispatch` | Janela `since_yesterday_utc`; append histórico; `DELIVERY_STATS_WRITE_SNAPSHOT=0` |
 | Delivery Insights 4h | `delivery-insights-4h.yml` | `schedule` (2×/h UTC), `workflow_dispatch` | Gera/commit `conf_delivery_insights_4h.csv`; inputs `insights_hours`, `list_mode` |
+| Delivery Insights timeseries | `delivery-insights-timeseries.yml` | `schedule` (2×/h UTC), `workflow_dispatch` | Gera/commit `conf_delivery_insights_timeseries.csv`; inputs `ts_hours`, `list_mode` |
 | Billing Usage | `usage-billing-snapshot.yml` | `schedule` (4×/dia UTC), `workflow_dispatch` | Gera/commit `conf_usage_billing_snapshot.csv`; estratégia de datas via inputs/env |
 | Financeiro + Saldos | `main.yml` | `schedule`, `workflow_dispatch` | Frequência menor; não corre delivery |
 
@@ -117,6 +119,7 @@
 | **Outgoing / operação rápida (~5 min)** | `conf_delivery_stats.csv` | Não somar `conf_delivery_horario.csv` para o mesmo “headline total”; não usar `conf_delivery_stats_history.csv` como número atual |
 | **Delivery & Errors (Past 4h, consola)** | `conf_delivery_insights_4h.csv` | Não usar `conf_delivery_stats.csv` para os mesmos cartões (janela e API diferentes); ver colunas `Insight_*` e `Insights_Hours` |
 | **Gráfico 15 min / heatmap dia** | `conf_delivery_horario.csv` (slots UTC) | Não usar como substituto do total da consola sem filtrar o dia e sem clarificar que é série agregada por slot |
+| **Evolução Delivery — mensagens por janela (UI)** | `conf_delivery_insights_timeseries.csv` | Não usar `conf_delivery_insights_4h.csv` para presets 5m/15m/1h/hoje/ontem (snapshot fixo ~4h); sem timeseries, mostrar só **segmentos** a partir do horário |
 | **Série / tendência larga** (ontem 00:00 UTC → agora, append diário) | `conf_delivery_stats_history.csv` | Não apresentar como snapshot “agora”; cada linha é uma execução/janela gravada no histórico |
 | **Total Spend / SMS (~Last 24h Insights)** | `conf_usage_billing_snapshot.csv` | Default **rolling_24h_proxy** (Usage Daily + mistura por hora; ver coluna `Range`). **SMS_Usage** costuma aproximar “SMS Transactions” melhor que `SMS_Count`. Não misturar com delivery |
 | **Saúde do pipeline** | `delivery_sync_state.json` | Metadados apenas (ex.: `last_run_utc`, `api_pages_by_account`) |

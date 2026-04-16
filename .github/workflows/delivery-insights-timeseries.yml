@@ -1,0 +1,107 @@
+# Séries 15 min UTC por mensagem (Insight 5) — alinha filtros da UI com Twilio sem snapshot fixo de 4h.
+name: Delivery — Insights timeseries (15 min)
+
+on:
+  schedule:
+    - cron: "22,52 * * * *"
+  workflow_dispatch:
+    inputs:
+      ts_hours:
+        description: "Profundidade a paginar (horas UTC para trás)"
+        type: string
+        default: "72"
+      list_mode:
+        description: "activity (default) ou sent"
+        type: choice
+        default: activity
+        options:
+          - activity
+          - sent
+
+permissions:
+  contents: write
+
+concurrency:
+  group: twilio-delivery-insights-ts-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  DELIVERY_INSIGHTS_TS_WRITE_CSV: "1"
+  DELIVERY_INSIGHTS_TS_HOURS: "72"
+  DELIVERY_INSIGHTS_TS_LIST_MODE: activity
+  DELIVERY_DIRECTION: outbound
+  DELIVERY_INSIGHTS_TS_MAX_PAGES: "200"
+  DELIVERY_INSIGHTS_TS_STOP_EMPTY: "8"
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  timeseries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - run: pip install -r requirements.txt
+      - name: Insights timeseries → CSV
+        env:
+          RECUPERACAO_NS_SID: ${{ secrets.RECUPERACAO_NS_SID }}
+          RECUPERACAO_NS_TOKEN: ${{ secrets.RECUPERACAO_NS_TOKEN }}
+          BROADCAST_JOAO_SID: ${{ secrets.BROADCAST_JOAO_SID }}
+          BROADCAST_JOAO_TOKEN: ${{ secrets.BROADCAST_JOAO_TOKEN }}
+          BROADCAST_BERNARDO_SID: ${{ secrets.BROADCAST_BERNARDO_SID }}
+          BROADCAST_BERNARDO_TOKEN: ${{ secrets.BROADCAST_BERNARDO_TOKEN }}
+          BROADCAST_RAFA_SID: ${{ secrets.BROADCAST_RAFA_SID }}
+          BROADCAST_RAFA_TOKEN: ${{ secrets.BROADCAST_RAFA_TOKEN }}
+          STANDBY_HAVEN_SID: ${{ secrets.STANDBY_HAVEN_SID }}
+          STANDBY_HAVEN_TOKEN: ${{ secrets.STANDBY_HAVEN_TOKEN }}
+          STANDBY_REHABLEAF_SID: ${{ secrets.STANDBY_REHABLEAF_SID }}
+          STANDBY_REHABLEAF_TOKEN: ${{ secrets.STANDBY_REHABLEAF_TOKEN }}
+          STANDBY_RICHARD_SID: ${{ secrets.STANDBY_RICHARD_SID }}
+          STANDBY_RICHARD_TOKEN: ${{ secrets.STANDBY_RICHARD_TOKEN }}
+          STANDBY_NATUREMOVE_SID: ${{ secrets.STANDBY_NATUREMOVE_SID }}
+          STANDBY_NATUREMOVE_TOKEN: ${{ secrets.STANDBY_NATUREMOVE_TOKEN }}
+        run: |
+          export DELIVERY_INSIGHTS_TS_WRITE_CSV=1
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            H="${{ github.event.inputs.ts_hours }}"
+            LM="${{ github.event.inputs.list_mode }}"
+            if [ -n "$H" ] && [ "$H" != "null" ]; then export DELIVERY_INSIGHTS_TS_HOURS="$H"; fi
+            if [ -n "$LM" ] && [ "$LM" != "null" ]; then export DELIVERY_INSIGHTS_TS_LIST_MODE="$LM"; fi
+          fi
+          python scripts/fetch_delivery_insights_timeseries.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: delivery-insights-timeseries-csv
+          if-no-files-found: warn
+          path: conf_delivery_insights_timeseries.csv
+
+  commitar-timeseries:
+    runs-on: ubuntu-latest
+    needs: [timeseries]
+    concurrency:
+      group: twilio-delivery-insights-ts-commit-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: delivery-insights-timeseries-csv
+      - name: Commitar timeseries insights
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          if [ ! -f conf_delivery_insights_timeseries.csv ]; then
+            echo "Artifact vazio — nada a commitar."
+            exit 0
+          fi
+          cp conf_delivery_insights_timeseries.csv /tmp/conf_delivery_insights_timeseries.csv
+          git fetch origin master
+          git reset --hard origin/master
+          cp /tmp/conf_delivery_insights_timeseries.csv conf_delivery_insights_timeseries.csv
+          git add conf_delivery_insights_timeseries.csv
+          git diff --staged --quiet || git commit -m "chore: delivery insights timeseries [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push origin master
