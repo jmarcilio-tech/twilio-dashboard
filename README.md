@@ -39,7 +39,12 @@ A atualização dos dados é orquestrada via GitHub Actions com a seguinte polí
 | :--- | :--- | :--- |
 | `conf_total_marco.csv` | Executivo / Diário | Gasto Total USD, Volume de SMS. |
 | `conf_detalhado_marco.csv` | Operacional / Categoria | Custos de Voz, IA, Lookups e Assinaturas. |
-| `conf_usage_billing_snapshot.csv` | Billing / Usage API | `totalprice`, `sms` count/usage/price por conta (workflow `usage-billing-snapshot.yml`). |
+| `conf_delivery_stats.csv` | Messaging / snapshot (~5 min) | Uma linha por conta: segmentos por estado, `List_Mode`, `Api_Pages*`, Insights por mensagem (`delivery-only.yml`). |
+| `conf_delivery_horario.csv` | Messaging / série 15 min UTC | Slots agregados; não substitui o snapshot para o mesmo “total” da consola. |
+| `conf_delivery_stats_history.csv` | Messaging / append diário | Mesmo schema que stats; série longa (`delivery-sweep-daily.yml`). |
+| `conf_usage_billing_snapshot.csv` | Billing / Usage API | `TotalPrice_Totalprice`, `SMS_Count`, `SMS_Usage`, etc. (workflow `usage-billing-snapshot.yml`). |
+
+Instruções para consumidores (Lovable / BI): **uma fonte por ecrã**, cabeçalhos CSV e prompt pronto a colar em **`docs/pipeline-documentacao.md`** (secções 10 e 10.1).
 
 ## 🛠️ Manutenção e Expansão
 

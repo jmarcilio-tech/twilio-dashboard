@@ -21,7 +21,9 @@
 |------|---------------------|-----------------|
 | Financeiro | `extratorv2.py` + `.github/workflows/main.yml` | `conf_total_marco.csv`, `conf_detalhado_marco.csv` |
 | Saldos | `saldo_extractor.py` + `.github/workflows/main.yml` | `conf_saldos.csv` |
-| Delivery | `delivery_extractor.py` + `.github/workflows/delivery-only.yml` | `conf_delivery_stats.csv`, `conf_delivery_horario.csv`, `delivery_sync_state.json` |
+| Delivery (rápido ~5 min) | `delivery_extractor.py` + `.github/workflows/delivery-only.yml` | `conf_delivery_stats.csv`, `conf_delivery_horario.csv`, `delivery_sync_state.json` |
+| Delivery (varredura diária) | mesmo script + `.github/workflows/delivery-sweep-daily.yml` | append a `conf_delivery_stats_history.csv` (não substitui o snapshot nem o horário) |
+| Billing / Usage API | `scripts/fetch_usage_billing_snapshot.py` + `.github/workflows/usage-billing-snapshot.yml` | `conf_usage_billing_snapshot.csv` |
 
 ---
 
@@ -61,7 +63,9 @@
 
 | Workflow | Ficheiro | Gatilhos | Notas |
 |----------|----------|----------|--------|
-| Delivery | `delivery-only.yml` | `schedule`, `repository_dispatch` (`delivery_tick`), `workflow_dispatch` | ~5 min; commit só de ficheiros de delivery |
+| Delivery | `delivery-only.yml` | `schedule`, `repository_dispatch` (`delivery_tick`), `workflow_dispatch` | ~5 min; commit de stats + horário + estado; CI pode usar `DELIVERY_LIST_MODE` (ex.: `activity`) |
+| Delivery varredura | `delivery-sweep-daily.yml` | `schedule`, `workflow_dispatch` | Janela `since_yesterday_utc`; append histórico; `DELIVERY_STATS_WRITE_SNAPSHOT=0` |
+| Billing Usage | `usage-billing-snapshot.yml` | `schedule` (4×/dia UTC), `workflow_dispatch` | Gera/commit `conf_usage_billing_snapshot.csv`; estratégia de datas via inputs/env |
 | Financeiro + Saldos | `main.yml` | `schedule`, `workflow_dispatch` | Frequência menor; não corre delivery |
 
 ---
@@ -103,16 +107,56 @@
 
 ---
 
-## 10. Lovable / dashboard — requisitos documentados
+## 10. Lovable / dashboard — uma fonte por ecrã (obrigatório)
 
-| Tema | Implementação sugerida |
-|------|-------------------------|
-| Fonte de dados | Raw: `conf_delivery_stats.csv`, `conf_delivery_horario.csv`, `delivery_sync_state.json` |
-| Saúde da coleta | `last_run_utc`, lag em minutos (UTC), estados Saudável / Atenção / Atrasado |
-| KPIs | **Janela móvel 5 min** (snapshot) vs **Acumulado do dia UTC** (soma slots do dia no horário) |
-| Fallback | Snapshot vazio → último válido com badges e níveis de confiança |
-| Segurança | Sem secrets no browser; allowlist de URLs; cache/TTL; rate limit; CORS |
-| QA | Checklist de testes (lag, troca de conta, UTC, acumulado estável, etc.) |
+| Ecrã / métrica | Ficheiro único | Nunca misturar com |
+|----------------|----------------|---------------------|
+| **Outgoing / delivery ao vivo** (Messaging Insights, ~janela do job) | `conf_delivery_stats.csv` | Não somar `conf_delivery_horario.csv` para o mesmo “headline total”; não usar `conf_delivery_stats_history.csv` como número atual |
+| **Gráfico 15 min / heatmap dia** | `conf_delivery_horario.csv` (slots UTC) | Não usar como substituto do total da consola sem filtrar o dia e sem clarificar que é série agregada por slot |
+| **Série / tendência larga** (ontem 00:00 UTC → agora, append diário) | `conf_delivery_stats_history.csv` | Não apresentar como snapshot “agora”; cada linha é uma execução/janela gravada no histórico |
+| **Total Spend / SMS Usage / preço (Account Insights, dia GMT)** | `conf_usage_billing_snapshot.csv` | Não comparar diretamente com totais do snapshot de delivery (API e janela diferentes) |
+| **Saúde do pipeline** | `delivery_sync_state.json` | Metadados apenas (ex.: `last_run_utc`, `api_pages_by_account`) |
+
+**Regras de leitura**
+
+- Usar **nomes de colunas** (cabeçalho CSV), não índices fixos — o schema pode evoluir.
+- **Segmentos** vs **mensagens**: no delivery, estados principais (`Delivered`, `Failed`, …) são por **segmentos**; colunas `Insight_*` são contagens por **mensagem** (legenda “Delivery & Errors” aproximada).
+- Mostrar sempre **UTC** na UI quando a fonte for UTC (`Extraido_Em`, `Agregado_Ate_Utc`, `Slot_15min`, `Extraido_Utc` no billing).
+- Se `Api_Pages_Capped` = 1, avisar que a lista API pode estar truncada (modo `activity`); sugerir revisão operacional, não “corrigir” números no cliente.
+
+**Cabeçalho `conf_delivery_stats.csv` / histórico** (mesmo schema):
+
+`Conta`, `Categoria`, `Janela`, `Modo`, `Direcao`, `List_Mode`, `Mensagens`, `Segmentos`, + estados (`Delivered` … `Queued`), `Taxa_Entrega_%`, `Insight_Delivered_Msgs`, `Insight_Failed_Msgs`, `Insight_Delivery_Unknown_Msgs`, `Insight_Undelivered_Msgs`, `Insight_Sent_Msgs`, `Insight_Total_Msgs`, `Api_Pages`, `Api_Pages_Capped`, `Agregado_Ate_Utc`, `Github_Run_Id`, `Extraido_Em`.
+
+**Cabeçalho `conf_usage_billing_snapshot.csv`:**
+
+`Conta`, `Range`, `TotalPrice_Totalprice`, `SMS_Count`, `SMS_Usage`, `SMS_Price`, `Sum_Price_NoTotalprice`, `SMS_Subcategories_Sample`, `Extraido_Utc`.  
+Linha agregada org: `Conta` = `__ORG_SUM__`.
+
+---
+
+## 10.1 Prompt para colar na Lovable (alinhamento Twilio)
+
+Copiar o bloco abaixo para o projeto Lovable (ajustar apenas URL raw do GitHub se necessário).
+
+```
+Contexto: dashboard alimentado por CSVs commitados no repositório GitHub jmarcilio-tech/twilio-dashboard (branch master). Os dados são produzidos por pipelines Python + GitHub Actions; não há Twilio no browser.
+
+Regra de ouro — UMA fonte por vista:
+1) KPIs de messaging / outgoing em tempo quase real: ler só conf_delivery_stats.csv. É um snapshot por execução (~5 min): coluna Janela descreve a janela (ex. 4min ou since_yesterday_utc_*). Não somar conf_delivery_horario.csv para obter o mesmo número que este snapshot.
+2) Gráficos por intervalo de 15 minutos (UTC): conf_delivery_horario.csv — cabeçalho inclui Slot_15min, Conta, Categoria, estados por segmento, Total_Slot.
+3) Histórico / séries longas (varredura diária): conf_delivery_stats_history.csv — mesmo schema que conf_delivery_stats.csv mas append ao longo do tempo; não usar como valor “atual” da conta sem filtrar pela última linha ou pelo Github_Run_Id/Extraido_Em desejados.
+4) Billing próximo da consola Account Insights (Usage Records, granularidade dia GMT): conf_usage_billing_snapshot.csv. A consola “Last 24 hours” é janela rolante; o CSV usa estratégia documentada no workflow (default end_utc_day = dia civil UTC corrente). Para “SMS Transactions” comparar SMS_Count vs SMS_Usage com o card da Twilio (usage costuma refletir segmentos).
+5) Estado operacional (último run, páginas API): delivery_sync_state.json — só metadados/health, não misturar com totais de billing.
+
+Implementação UI:
+- Fetch CSV raw (cache curto, ex. 60–120s). Parse por cabeçalho.
+- Rótulos: sempre indicar fonte (“Snapshot delivery”, “Slots 15 min UTC”, “Histórico pipeline”, “Billing Usage API”) e timezone UTC onde aplicável.
+- Se Api_Pages_Capped=1 numa conta, mostrar aviso de dados possivelmente truncados.
+- Não expor secrets; URL do repo pode ser pública read-only.
+
+Não fazer: misturar totais de conf_delivery_horario com conf_delivery_stats no mesmo KPI; assumir que Mensagens e Segmentos são intercambiáveis; comparar billing Last-24h rolante com um único dia UTC sem explicar a diferença.
+```
 
 ---
 
