@@ -1,6 +1,8 @@
-Conta,Categoria,Janela,Mensagens,Segmentos,Delivered,Failed,Undelivered,Sent,Sending,Unknown,Taxa_Entrega_%,Extraido_Em
-NS,Recuperação,15min,80,197,184,3,9,0,0,1,93.4,2026-04-15 19:44 UTC
-Joao,Broadcast,15min,35436,44148,35104,6285,1179,1182,0,398,79.51,2026-04-15 19:44 UTC
-Bernardo,Broadcast,15min,7490,9392,7625,869,240,294,0,364,81.19,2026-04-15 19:44 UTC
-Havenmove,Standby,15min,2,2,0,0,0,0,0,2,0.0,2026-04-15 19:44 UTC
-Richard,Standby,15min,62,149,139,3,3,2,0,2,93.29,2026-04-15 19:44 UTC
+Conta,Categoria,Janela,Modo,Mensagens,Segmentos,Delivered,Failed,Undelivered,Sent,Sending,Delivery_Unknown,Accepted,Queued,Taxa_Entrega_%,Extraido_Em
+NS,Recuperação,baseline_mes_2026-04,baseline_mes,59319,117705,111345,726,2280,855,0,2499,0,0,94.6,2026-04-15 20:50 UTC
+Joao,Broadcast,baseline_mes_2026-04,baseline_mes,8886994,9563510,7639727,1177804,401332,139874,0,204773,0,0,79.88,2026-04-15 20:50 UTC
+Bernardo,Broadcast,baseline_mes_2026-04,baseline_mes,7404815,9362405,7379291,1080553,579708,138670,0,184183,0,0,78.82,2026-04-15 20:50 UTC
+Rafa,Broadcast,baseline_mes_2026-04,baseline_mes,159,159,0,0,0,0,0,159,0,0,0.0,2026-04-15 20:50 UTC
+Havenmove,Standby,baseline_mes_2026-04,baseline_mes,171889,186359,99666,5016,70234,1710,0,9733,0,0,53.48,2026-04-15 20:50 UTC
+Richard,Standby,baseline_mes_2026-04,baseline_mes,231737,276123,185052,8199,69531,2202,0,11139,0,0,67.02,2026-04-15 20:50 UTC
+Naturemove,Standby,baseline_mes_2026-04,baseline_mes,14833,22835,14429,18,7393,341,0,654,0,0,63.19,2026-04-15 20:50 UTC
