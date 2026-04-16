@@ -1,22 +1,12 @@
-name: Extração Twilio - A cada 5 minutos
+name: Extração Twilio - Financeiro e Saldos
 
-# Agenda: a cada 5 minutos, desfasado de :00 para reduzir contenda no agendador.
-# para reduzir atrasos do agendador da GitHub. O `schedule` continua a ser "best effort":
+# Agenda de apoio (financeiro/saldos) com menor frequência que delivery.
+# O `schedule` do GitHub continua a ser "best effort":
 # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
 on:
   schedule:
-    - cron: "2-59/5 * * * *"
+    - cron: "11,41 * * * *"
   workflow_dispatch:
-    inputs:
-      delivery_fetch_mode:
-        description: "delivery_extractor — auto=mês 1× + depois 5min; baseline_24h=teste; baseline_mes=forçar mês; incremental=só janela"
-        type: choice
-        default: auto
-        options:
-          - auto
-          - incremental
-          - baseline_mes
-          - baseline_24h
 
 permissions:
   contents: write
@@ -25,12 +15,6 @@ permissions:
 # Ver: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  # Janela só em modo incremental (5 min). Baseline mensal/24h ignora isto para o DateSent>.
-  DELIVERY_JANELA_HORAS: "0.0833333333"
-  # auto: baseline mensal 1× por mês (ficheiro no repo); depois incremental. Dispatch permite baseline_24h.
-  DELIVERY_FETCH_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.delivery_fetch_mode || 'auto' }}
-  # outbound = mesmo recorte que Messaging Insights → Delivery & Errors → Outgoing
-  DELIVERY_DIRECTION: outbound
 
 jobs:
 
@@ -69,42 +53,6 @@ jobs:
             conf_total_marco.csv
             conf_detalhado_marco.csv
 
-  delivery:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-      - run: pip install -r requirements.txt
-      - name: 📡 Extrator Delivery & Errors
-        env:
-          RECUPERACAO_NS_SID: ${{ secrets.RECUPERACAO_NS_SID }}
-          RECUPERACAO_NS_TOKEN: ${{ secrets.RECUPERACAO_NS_TOKEN }}
-          BROADCAST_JOAO_SID: ${{ secrets.BROADCAST_JOAO_SID }}
-          BROADCAST_JOAO_TOKEN: ${{ secrets.BROADCAST_JOAO_TOKEN }}
-          BROADCAST_BERNARDO_SID: ${{ secrets.BROADCAST_BERNARDO_SID }}
-          BROADCAST_BERNARDO_TOKEN: ${{ secrets.BROADCAST_BERNARDO_TOKEN }}
-          BROADCAST_RAFA_SID: ${{ secrets.BROADCAST_RAFA_SID }}
-          BROADCAST_RAFA_TOKEN: ${{ secrets.BROADCAST_RAFA_TOKEN }}
-          STANDBY_HAVEN_SID: ${{ secrets.STANDBY_HAVEN_SID }}
-          STANDBY_HAVEN_TOKEN: ${{ secrets.STANDBY_HAVEN_TOKEN }}
-          STANDBY_REHABLEAF_SID: ${{ secrets.STANDBY_REHABLEAF_SID }}
-          STANDBY_REHABLEAF_TOKEN: ${{ secrets.STANDBY_REHABLEAF_TOKEN }}
-          STANDBY_RICHARD_SID: ${{ secrets.STANDBY_RICHARD_SID }}
-          STANDBY_RICHARD_TOKEN: ${{ secrets.STANDBY_RICHARD_TOKEN }}
-          STANDBY_NATUREMOVE_SID: ${{ secrets.STANDBY_NATUREMOVE_SID }}
-          STANDBY_NATUREMOVE_TOKEN: ${{ secrets.STANDBY_NATUREMOVE_TOKEN }}
-        run: python delivery_extractor.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: csv-delivery
-          path: |
-            conf_delivery_stats.csv
-            conf_delivery_horario.csv
-            delivery_sync_state.json
-
   saldos:
     runs-on: ubuntu-latest
     steps:
@@ -140,7 +88,7 @@ jobs:
 
   commitar:
     runs-on: ubuntu-latest
-    needs: [financeiro, delivery, saldos]
+    needs: [financeiro, saldos]
     # Evita dois pushes ao mesmo tempo quando há execuções sobrepostas; não cancela extrações.
     concurrency:
       group: twilio-extracao-commit-${{ github.ref }}
@@ -152,9 +100,6 @@ jobs:
           name: csv-financeiro
       - uses: actions/download-artifact@v4
         with:
-          name: csv-delivery
-      - uses: actions/download-artifact@v4
-        with:
           name: csv-saldos
       - name: 💾 Commitar todos os CSVs
         run: |
@@ -163,9 +108,6 @@ jobs:
           # Copia os CSVs novos para fora do repo
           cp conf_total_marco.csv /tmp/conf_total_marco.csv
           cp conf_detalhado_marco.csv /tmp/conf_detalhado_marco.csv
-          cp conf_delivery_stats.csv /tmp/conf_delivery_stats.csv
-          cp conf_delivery_horario.csv /tmp/conf_delivery_horario.csv
-          if [ -f delivery_sync_state.json ]; then cp delivery_sync_state.json /tmp/delivery_sync_state.json; fi
           cp conf_saldos.csv /tmp/conf_saldos.csv
           # Sincroniza com o remoto
           git fetch origin master
@@ -173,12 +115,8 @@ jobs:
           # Restaura os CSVs novos por cima
           cp /tmp/conf_total_marco.csv conf_total_marco.csv
           cp /tmp/conf_detalhado_marco.csv conf_detalhado_marco.csv
-          cp /tmp/conf_delivery_stats.csv conf_delivery_stats.csv
-          cp /tmp/conf_delivery_horario.csv conf_delivery_horario.csv
-          if [ -f /tmp/delivery_sync_state.json ]; then cp /tmp/delivery_sync_state.json delivery_sync_state.json; fi
           cp /tmp/conf_saldos.csv conf_saldos.csv
           # Commita e faz push
-          git add conf_total_marco.csv conf_detalhado_marco.csv conf_delivery_stats.csv conf_delivery_horario.csv conf_saldos.csv
-          if [ -f delivery_sync_state.json ]; then git add delivery_sync_state.json; fi
+          git add conf_total_marco.csv conf_detalhado_marco.csv conf_saldos.csv
           git diff --staged --quiet || git commit -m "chore: atualiza CSVs Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push origin master
