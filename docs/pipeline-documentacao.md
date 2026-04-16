@@ -135,27 +135,55 @@ Linha agregada org: `Conta` = `__ORG_SUM__`.
 
 ---
 
-## 10.1 Prompt para colar na Lovable (alinhamento Twilio)
+## 10.1 Prompt para colar na Lovable (atualizar dashboard + novos valores billing)
 
-Copiar o bloco abaixo para o projeto Lovable (ajustar apenas URL raw do GitHub se necessário).
+Copiar o bloco abaixo para o projeto Lovable (Twilio Intelligence Dashboard). Ajustar só se o branch ou o owner do repo mudarem.
 
 ```
-Contexto: dashboard alimentado por CSVs commitados no repositório GitHub jmarcilio-tech/twilio-dashboard (branch master). Os dados são produzidos por pipelines Python + GitHub Actions; não há Twilio no browser.
+Atualiza o Twilio Intelligence Dashboard para consumir os CSVs do GitHub e alinhar os números com a Twilio Console conforme abaixo.
 
-Regra de ouro — UMA fonte por vista:
-1) KPIs de messaging / outgoing em tempo quase real: ler só conf_delivery_stats.csv. É um snapshot por execução (~5 min): coluna Janela descreve a janela (ex. 4min ou since_yesterday_utc_*). Não somar conf_delivery_horario.csv para obter o mesmo número que este snapshot.
-2) Gráficos por intervalo de 15 minutos (UTC): conf_delivery_horario.csv — cabeçalho inclui Slot_15min, Conta, Categoria, estados por segmento, Total_Slot.
-3) Histórico / séries longas (varredura diária): conf_delivery_stats_history.csv — mesmo schema que conf_delivery_stats.csv mas append ao longo do tempo; não usar como valor “atual” da conta sem filtrar pela última linha ou pelo Github_Run_Id/Extraido_Em desejados.
-4) Billing ~**Last 24 hours** (Insights): conf_usage_billing_snapshot.csv — default **rolling_24h_proxy** (Daily + blend por hora). **TotalPrice_Totalprice** / **SMS_Price** vs spend; “SMS Transactions” → comparar sobretudo **SMS_Usage** (e **SMS_Count** como referência secundária).
-5) Estado operacional (último run, páginas API): delivery_sync_state.json — só metadados/health, não misturar com totais de billing.
+## URLs raw (branch master)
+Base: https://raw.githubusercontent.com/jmarcilio-tech/twilio-dashboard/master/
+- conf_delivery_stats.csv
+- conf_delivery_horario.csv
+- conf_delivery_stats_history.csv
+- conf_usage_billing_snapshot.csv
+- delivery_sync_state.json
+(opcional financeiro: conf_total_marco.csv, conf_detalhado_marco.csv, conf_saldos.csv)
 
-Implementação UI:
-- Fetch CSV raw (cache curto, ex. 60–120s). Parse por cabeçalho.
-- Rótulos: sempre indicar fonte (“Snapshot delivery”, “Slots 15 min UTC”, “Histórico pipeline”, “Billing Usage API”) e timezone UTC onde aplicável.
-- Se Api_Pages_Capped=1 numa conta, mostrar aviso de dados possivelmente truncados.
-- Não expor secrets; URL do repo pode ser pública read-only.
+## Regra de ouro — UMA fonte por ecrã
+1) Messaging / outgoing “ao vivo”: SÓ conf_delivery_stats.csv (snapshot ~5 min). Coluna Janela descreve a janela. NÃO somar conf_delivery_horario.csv para o mesmo headline total.
+2) Gráfico 15 min UTC: conf_delivery_horario.csv (Slot_15min, segmentos por estado, Total_Slot).
+3) Tendência longa (varredura diária): conf_delivery_stats_history.csv — append; NÃO usar como “valor agora” sem filtrar por Extraido_Em / Github_Run_Id.
+4) Account Insights / Billing (~Last 24h): SÓ conf_usage_billing_snapshot.csv. O pipeline usa estratégia rolling_24h_proxy (Usage Daily + mistura por hora na janela UTC; ver coluna Range). NÃO misturar com delivery.
+5) Saúde do pipeline: delivery_sync_state.json (metadados).
 
-Não fazer: misturar totais de conf_delivery_horario com conf_delivery_stats no mesmo KPI; assumir que Mensagens e Segmentos são intercambiáveis; tratar o CSV billing como paridade exacta ao pixel com Insights (é aproximação API GMT).
+## Atualizar cartões da área Billing (substituir mapeamentos antigos)
+Ler por nome de coluna (nunca por índice fixo). Filtrar linha por Conta (excluir __ORG_SUM__ para vista por conta).
+
+Mapeamento para os cards estilo “Account Insights — Last 24 hours” (UTC):
+- Total Spend → coluna TotalPrice_Totalprice (string numérica USD).
+- Programmable SMS Spend → coluna SMS_Price.
+- SMS Transactions → coluna SMS_Usage (valor principal no ecrã). Mostrar também SMS_Count como “mensagens (count)” ou tooltip secundário — o card da consola pode aproximar-se mais de Usage do que de Count.
+
+Sempre mostrar:
+- Coluna Range (ex.: texto com “rolling_24h_proxy”) num subtítulo ou badge: “Aprox. Last 24h (API GMT + blend)”.
+- Extraido_Utc do CSV como “Atualizado em … UTC”.
+
+## Delivery (inalterado na lógica de fonte)
+- Segmentos: colunas Delivered, Failed, … no snapshot.
+- Mensagens (Insight): colunas Insight_*.
+- Api_Pages_Capped = 1 → aviso de possível truncagem.
+
+## Implementação técnica
+- Fetch GET aos raw URLs; cache 60–120s; parse CSV com cabeçalho.
+- Sem Twilio SDK nem secrets no browser.
+- Não expor credenciais.
+
+## Não fazer
+- Misturar conf_delivery_horario + conf_delivery_stats num único KPI de total outgoing.
+- Tratar billing CSV como igual matemática à consola ao centavo (é proxy; Range explica o modelo).
+- Assumir SMS_Count = “SMS Transactions” da consola — priorizar SMS_Usage.
 ```
 
 ---
