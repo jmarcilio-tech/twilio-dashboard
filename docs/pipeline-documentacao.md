@@ -22,7 +22,7 @@
 | Nome | Ficheiro / workflow | Saída principal |
 |------|---------------------|-----------------|
 | Financeiro | `extratorv2.py` + `.github/workflows/main.yml` | `conf_total_marco.csv`, `conf_detalhado_marco.csv` |
-| Saldos | `saldo_extractor.py` + `.github/workflows/main.yml` | `conf_saldos.csv` |
+| Saldos | `saldo_extractor.py` + `.github/workflows/saldo-only.yml` | `conf_saldos.csv` |
 | Delivery (rápido ~5 min) | `delivery_extractor.py` + `.github/workflows/delivery-only.yml` | `conf_delivery_stats.csv`, `conf_delivery_horario.csv`, `delivery_sync_state.json` |
 | Delivery (varredura diária) | mesmo script + `.github/workflows/delivery-sweep-daily.yml` | append a `conf_delivery_stats_history.csv` (não substitui o snapshot nem o horário) |
 | Delivery Insights (Past N h, consola) | `scripts/fetch_delivery_insights_snapshot.py` + `.github/workflows/delivery-insights-4h.yml` | `conf_delivery_insights_4h.csv` (mensagens + segmentos; `activity` + outbound) |
@@ -68,12 +68,13 @@
 
 | Workflow | Ficheiro | Gatilhos | Notas |
 |----------|----------|----------|--------|
+| Saldos (rápido ~5 min) | `saldo-only.yml` | `schedule`, `repository_dispatch` (`saldo_tick`), `workflow_dispatch` | `conf_saldos.csv` apenas; leve |
 | Delivery | `delivery-only.yml` | `schedule`, `repository_dispatch` (`delivery_tick`), `workflow_dispatch` | ~5 min; commit de stats + horário + estado; CI pode usar `DELIVERY_LIST_MODE` (ex.: `activity`) |
 | Delivery varredura | `delivery-sweep-daily.yml` | `schedule`, `workflow_dispatch` | Janela `since_yesterday_utc`; append histórico; `DELIVERY_STATS_WRITE_SNAPSHOT=0` |
 | Delivery Insights 4h | `delivery-insights-4h.yml` | `schedule` (2×/h UTC), `workflow_dispatch` | Gera/commit `conf_delivery_insights_4h.csv`; inputs `insights_hours`, `list_mode` |
 | Delivery Insights timeseries | `delivery-insights-timeseries.yml` | `schedule` (2×/h UTC), `workflow_dispatch` | Gera/commit `conf_delivery_insights_timeseries.csv`; inputs `ts_hours`, `list_mode` |
-| Billing Usage | `usage-billing-snapshot.yml` | `schedule` (4×/dia UTC), `workflow_dispatch` | Gera/commit snapshot + por categoria + **diário**; inputs opcionais `billing_month` (AAAA-MM), `usage_start_date` / `usage_end_date` (GMT) para mês ou intervalo |
-| Financeiro + Saldos | `main.yml` | `schedule`, `workflow_dispatch` | Frequência menor; não corre delivery |
+| Billing Usage | `usage-billing-snapshot.yml` | `schedule` (4×/dia UTC), `workflow_dispatch` | Gera/commit snapshot + por categoria + **diário**; inputs opcionais `billing_month` (AAAA-MM), `usage_start_date` / `usage_end_date` (GMT), `usage_test_account` (ex. `richard` — só com intervalo fixo; grava em `month/`) |
+| Financeiro | `main.yml` | `schedule`, `workflow_dispatch` | Só `conf_total_marco.csv` / `conf_detalhado_marco.csv`; não corre delivery nem saldos |
 
 ---
 
@@ -84,8 +85,10 @@
 | `schedule` (GitHub) | Fallback; documentação GitHub: *best effort* (pode atrasar) |
 | `repository_dispatch` | Disparo HTTP externo mais previsível |
 | Task `TwilioDeliveryDispatch5m` | Executa `scripts/dispatch-delivery.ps1` a cada 5 min |
+| Task `TwilioSaldoDispatch5m` (opcional) | Executa `scripts/dispatch-saldo.ps1` a cada 5 min — mesmo token que delivery; cadência mais estável que só o `schedule` do GitHub |
 | Task `TwilioDeliveryWatchdog15m` | Se último run de `delivery-only.yml` atrasar > **12 min**, re-dispara |
 | `concurrency` (delivery) | `cancel-in-progress: true` — dois disparos próximos podem gerar run **cancelled** (esperado) |
+| `concurrency` (saldos) | Igual ao delivery: run e commit com `cancel-in-progress: true` — prioriza o snapshot mais recente |
 | `commitar-delivery` | Concorrência para evitar dois `git push` ao mesmo tempo |
 
 ---
@@ -109,6 +112,7 @@
 | Script | Função |
 |--------|--------|
 | `scripts/dispatch-delivery.ps1` | `POST /repos/.../dispatches` com `event_type=delivery_tick` e token opcional |
+| `scripts/dispatch-saldo.ps1` | Idem com `event_type=saldo_tick` |
 | `scripts/dispatch-delivery-watchdog.ps1` | Consulta último run (`gh run list`) e re-dispara se necessário |
 | `scripts/setup-dispatch-secret.ps1` | Gera token e guia GitHub + `setx` |
 

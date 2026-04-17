@@ -288,6 +288,14 @@ def main():
     end_e = (os.getenv("USAGE_END_DATE") or "").strip()
     fixed_range = len(start_e) == 10 and len(end_e) == 10 and start_e <= end_e
 
+    if pick and not fixed_range:
+        print(
+            "ERRO: TEST_USAGE_ACCOUNT exige intervalo fixo (USAGE_START_DATE + USAGE_END_DATE, "
+            "ex. billing_month no workflow). Sem isso, o snapshot na raiz seria substituido por uma unica conta.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     if fixed_range:
         params["StartDate"] = start_e
         params["EndDate"] = end_e

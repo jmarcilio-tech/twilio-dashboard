@@ -35,6 +35,10 @@ on:
         description: "Opcional fim GMT AAAA-MM-DD (com usage_start_date)"
         type: string
         default: ""
+      usage_test_account:
+        description: "Opcional filtro por nome (ex. richard). Obrigatorio com billing_month ou usage_start/end — gera month/ so com essa conta (comparar consola)."
+        type: string
+        default: ""
 
 permissions:
   contents: write
@@ -89,6 +93,7 @@ jobs:
             MON="${{ github.event.inputs.billing_month }}"
             US="${{ github.event.inputs.usage_start_date }}"
             UE="${{ github.event.inputs.usage_end_date }}"
+            TA="${{ github.event.inputs.usage_test_account }}"
             if [ -n "$STRAT" ] && [ "$STRAT" != "null" ]; then
               export USAGE_DATE_STRATEGY="$STRAT"
             fi
@@ -104,6 +109,9 @@ jobs:
             if [ -n "$US" ] && [ "$US" != "null" ] && [ -n "$UE" ] && [ "$UE" != "null" ]; then
               export USAGE_START_DATE="$US"
               export USAGE_END_DATE="$UE"
+            fi
+            if [ -n "$TA" ] && [ "$TA" != "null" ]; then
+              export TEST_USAGE_ACCOUNT="$TA"
             fi
           fi
           python scripts/fetch_usage_billing_snapshot.py
