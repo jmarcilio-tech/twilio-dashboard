@@ -1,5 +1,7 @@
 # Usage híbrido (snapshot + por categoria) — referência Lovable
 
+**Contrato de abas / prioridade para prompts:** [`docs/lovable-dashboard-3-abas.md`](../lovable-dashboard-3-abas.md) (aba Billing isolada).
+
 Copiar ficheiros desta pasta para o projeto Lovable (ajustar `@/` e componentes UI).
 
 ## Pipeline (repo `twilio-dash`)

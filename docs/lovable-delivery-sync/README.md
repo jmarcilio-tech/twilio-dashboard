@@ -1,5 +1,7 @@
 # Sincronizar aba Delivery (Lovable) com janela do gráfico
 
+**Contrato de abas / prioridade para prompts:** [`docs/lovable-dashboard-3-abas.md`](../lovable-dashboard-3-abas.md) (aba Delivery isolada).
+
 Copie os ficheiros desta pasta para o projeto Lovable **mantendo os caminhos** `src/...` e `supabase/...`.
 
 ## Pipeline (repo twilio-dash)

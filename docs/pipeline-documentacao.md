@@ -120,6 +120,8 @@
 
 ## 10. Lovable / dashboard — uma fonte por ecrã (obrigatório)
 
+**Resumo para UI em 3 separadores (Billing vs Delivery vs Financeiro):** ver **`docs/lovable-dashboard-3-abas.md`** — evita misturar CSVs entre abas e define **gasto total** = `TotalPrice_Totalprice` na linha `__ORG_SUM__`.
+
 | Ecrã / métrica | Ficheiro único | Nunca misturar com |
 |----------------|----------------|---------------------|
 | **Outgoing / operação rápida (~5 min)** | `conf_delivery_stats.csv` | Não somar `conf_delivery_horario.csv` para o mesmo “headline total”; não usar `conf_delivery_stats_history.csv` como número atual |
@@ -182,10 +184,10 @@ Base: https://raw.githubusercontent.com/jmarcilio-tech/twilio-dashboard/master/
 6) Saúde do pipeline: delivery_sync_state.json (metadados).
 
 ## Billing — cartões “Last 24 hours”
-- Total Spend → TotalPrice_Totalprice
+- Total Spend → TotalPrice_Totalprice (linha por conta; **total org** na linha `__ORG_SUM__`)
 - Programmable SMS Spend → SMS_Price
 - SMS Transactions → SMS_Usage (principal); SMS_Count como secundário/tooltip
-- Badge: texto da coluna Range + “Aprox. Last 24h (API GMT + blend)”
+- Badge: texto da coluna **Range** + **Extraido_Utc** (default **`cover_days`** — dias civis UTC na janela; ver workflow; legado **`rolling_24h_proxy`** = blend horário)
 
 ## Implementação técnica
 - Fetch GET aos raw URLs; cache 60–120s; parse por cabeçalho.

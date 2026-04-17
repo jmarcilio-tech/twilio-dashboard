@@ -1,5 +1,7 @@
 # Guia Usage por conta — prompt para Lovable
 
+**Antes de prompts longos:** ver divisão em 3 abas e KPI **gasto total** em [`lovable-dashboard-3-abas.md`](./lovable-dashboard-3-abas.md).
+
 Este documento liga o **pipeline** (`conf_usage_billing_snapshot.csv`) a uma **nova guia** no dashboard (Lovable), com **uma linha por conta** + linha agregada `__ORG_SUM__`.
 
 ---

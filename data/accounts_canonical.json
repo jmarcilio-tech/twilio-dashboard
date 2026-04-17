@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "description": "Ordem e etiquetas das subcontas — alinhar dropdowns/gráficos na Lovable com os CSVs (coluna Conta).",
+  "account_order": [
+    "NS",
+    "Joao",
+    "Bernardo",
+    "Rafa",
+    "Havenmove",
+    "Rehableaf",
+    "Richard",
+    "Naturemove"
+  ],
+  "org_sum_row_conta": "__ORG_SUM__",
+  "accounts": [
+    { "nome": "NS", "categoria": "Recuperação" },
+    { "nome": "Joao", "categoria": "Broadcast" },
+    { "nome": "Bernardo", "categoria": "Broadcast" },
+    { "nome": "Rafa", "categoria": "Broadcast" },
+    { "nome": "Havenmove", "categoria": "Standby" },
+    { "nome": "Rehableaf", "categoria": "Standby" },
+    { "nome": "Richard", "categoria": "Standby" },
+    { "nome": "Naturemove", "categoria": "Standby" }
+  ]
+}

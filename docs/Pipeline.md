@@ -4,7 +4,7 @@ Documento para **apresentação e acompanhamento**: cada linha é uma tarefa; **
 
 **Como usar:** ao apresentar, percorre as secções; no dia a dia, atualiza as caixas no editor (Markdown). Em Issues/PRs do GitHub as caixas também podem ser clicáveis.
 
-**Relacionado:** [Documentação detalhada do pipeline](./pipeline-documentacao.md)
+**Relacionado:** [Documentação detalhada do pipeline](./pipeline-documentacao.md) · [Lovable — 3 abas isoladas](./lovable-dashboard-3-abas.md)
 
 ---
 
