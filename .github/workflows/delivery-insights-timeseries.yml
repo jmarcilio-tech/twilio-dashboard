@@ -22,6 +22,10 @@ on:
         description: "Teto de paginas Messages.json por conta (activity); ~1000 msgs/pagina. Default 2500 ~2,5M msgs"
         type: string
         default: "2500"
+      ts_chunk_hours:
+        description: "Horas por fatia UTC (0=sem fatias). Default 4 — MAX_PAGES vale por fatia (contas com M+ msgs)"
+        type: string
+        default: "4"
 
 permissions:
   contents: write
@@ -39,6 +43,8 @@ env:
   DELIVERY_DIRECTION: outbound
   DELIVERY_INSIGHTS_TS_MAX_PAGES: "2500"
   DELIVERY_INSIGHTS_TS_STOP_EMPTY: "8"
+  # Fatias UTC: MAX_PAGES aplica-se a cada fatia (essencial p/ contas com M+ msgs na janela)
+  DELIVERY_INSIGHTS_TS_CHUNK_HOURS: "4"
   PYTHONUNBUFFERED: "1"
 
 jobs:
@@ -83,9 +89,11 @@ jobs:
             H="${{ github.event.inputs.ts_hours }}"
             LM="${{ github.event.inputs.list_mode }}"
             MP="${{ github.event.inputs.ts_max_pages }}"
+            CH="${{ github.event.inputs.ts_chunk_hours }}"
             if [ -n "$H" ] && [ "$H" != "null" ]; then export DELIVERY_INSIGHTS_TS_HOURS="$H"; fi
             if [ -n "$LM" ] && [ "$LM" != "null" ]; then export DELIVERY_INSIGHTS_TS_LIST_MODE="$LM"; fi
             if [ -n "$MP" ] && [ "$MP" != "null" ]; then export DELIVERY_INSIGHTS_TS_MAX_PAGES="$MP"; fi
+            if [ -n "$CH" ] && [ "$CH" != "null" ]; then export DELIVERY_INSIGHTS_TS_CHUNK_HOURS="$CH"; fi
           fi
           python scripts/fetch_delivery_insights_timeseries.py
       - uses: actions/upload-artifact@v4

@@ -6,6 +6,7 @@ Agrupa Messages API (activity) por Slot_15min igual a conf_delivery_horario.csv.
 
 Env:
   DELIVERY_INSIGHTS_TS_HOURS — default 72 (profundidade a paginar para tras em UTC)
+  DELIVERY_INSIGHTS_TS_CHUNK_HOURS — default 4 (divide a janela em fatias UTC; paginação / MAX_PAGES vale **por fatia** — necessário para contas com milhões de msgs na janela). Use 0 para um único loop (legado).
   DELIVERY_INSIGHTS_TS_LIST_MODE — activity (default) | sent
   DELIVERY_INSIGHTS_TS_MAX_PAGES — default 2500 (paginas Messages API em activity; ~2,5M msgs/conta/run — teto para contas ~2M na janela)
   DELIVERY_INSIGHTS_TS_STOP_EMPTY — default 8
@@ -160,20 +161,29 @@ def collect_timeseries_for_account(
     token: str,
     nome: str,
     cat: str,
-    agora: datetime,
-    since_dt: datetime,
+    msg_since: datetime,
+    msg_until: datetime,
     list_mode: str,
     max_pages: int,
     stop_empty: int,
     direction: str,
+    *,
+    api_date_lower: datetime | None = None,
+    api_date_upper: datetime | None = None,
 ) -> dict[tuple[str, str], dict[str, int]]:
-    """Retorna mapa (Slot_15min, Conta) -> contadores insight."""
+    """Uma passagem de paginação (uma fatia temporal). MAX_PAGES aplica-se a esta passagem."""
     session = requests.Session()
     session.auth = HTTPBasicAuth(sid, token)
     url = f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json"
     params: dict = {"PageSize": 1000}
     if list_mode == "sent":
-        params["DateSent>"] = since_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        params["DateSent>"] = msg_since.strftime("%Y-%m-%dT%H:%M:%SZ")
+        if api_date_upper:
+            params["DateSent<"] = api_date_upper.strftime("%Y-%m-%dT%H:%M:%SZ")
+    elif list_mode == "activity" and api_date_lower is not None:
+        params["DateSent>"] = api_date_lower.strftime("%Y-%m-%dT%H:%M:%SZ")
+        if api_date_upper:
+            params["DateSent<"] = api_date_upper.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     agg: dict[tuple[str, str], dict[str, int]] = defaultdict(
         lambda: {
@@ -188,11 +198,13 @@ def collect_timeseries_for_account(
     consecutive_empty = 0
 
     while url:
-        if list_mode == "activity" and pagina >= max_pages:
+        if pagina >= max_pages:
+            chunk_lbl = ""
+            if api_date_lower:
+                chunk_lbl = f" fatia {api_date_lower.isoformat()}..{(api_date_upper or msg_until).isoformat()}"
             print(
-                f"WARN {nome}: parou em DELIVERY_INSIGHTS_TS_MAX_PAGES={max_pages} "
-                f"(~{max_pages * 1000} msgs lidas); totais por slot podem ficar **abaixo** do "
-                f"Messaging Insights (consola agrega tudo; REST lista com teto de paginas)."
+                f"WARN {nome}: parou em DELIVERY_INSIGHTS_TS_MAX_PAGES={max_pages}{chunk_lbl} "
+                f"(~{max_pages * 1000} msgs nesta fatia); reduzir CHUNK_HOURS ou subir MAX_PAGES."
             )
             break
         r = session.get(url, params=params, timeout=90)
@@ -205,13 +217,16 @@ def collect_timeseries_for_account(
             if not direction_ok(m, direction):
                 continue
             if list_mode == "activity":
-                if not in_activity_time_window(m, since_dt, agora):
+                if not in_activity_time_window(m, msg_since, msg_until):
                     continue
             else:
-                if not in_sent_window(m, since_dt):
+                ds = parse_twilio_dt(m.get("date_sent") or "")
+                if ds is None or ds < msg_since or ds > msg_until:
                     continue
             ts = message_timestamp_for_slot(m)
             if ts is None:
+                continue
+            if ts < msg_since or ts > msg_until:
                 continue
             slot = slot_15min_from_dt(ts)
             ch = classificar_status(m.get("status"))
@@ -235,6 +250,78 @@ def collect_timeseries_for_account(
     return agg
 
 
+def collect_timeseries_for_account_window(
+    sid: str,
+    token: str,
+    nome: str,
+    cat: str,
+    agora: datetime,
+    since_dt: datetime,
+    list_mode: str,
+    max_pages: int,
+    stop_empty: int,
+    direction: str,
+    chunk_hours: float,
+) -> dict[tuple[str, str], dict[str, int]]:
+    """Agrega uma ou várias fatias; cada fatia reinicia a paginação (MAX_PAGES por fatia)."""
+    merged: dict[tuple[str, str], dict[str, int]] = defaultdict(
+        lambda: {
+            "Insight_Delivered_Msgs": 0,
+            "Insight_Failed_Msgs": 0,
+            "Insight_Undelivered_Msgs": 0,
+            "Insight_Sent_Msgs": 0,
+            "Insight_Delivery_Unknown_Msgs": 0,
+        }
+    )
+
+    if chunk_hours <= 0:
+        part = collect_timeseries_for_account(
+            sid,
+            token,
+            nome,
+            cat,
+            since_dt,
+            agora,
+            list_mode,
+            max_pages,
+            stop_empty,
+            direction,
+            api_date_lower=None,
+            api_date_upper=None,
+        )
+        for k, d in part.items():
+            for kk, v in d.items():
+                merged[k][kk] += v
+        return merged
+
+    t = since_dt
+    slice_i = 0
+    while t < agora:
+        t_end = min(t + timedelta(hours=chunk_hours), agora)
+        slice_i += 1
+        print(f"  -- {nome} fatia {slice_i}: {t.isoformat()} .. {t_end.isoformat()} UTC")
+        part = collect_timeseries_for_account(
+            sid,
+            token,
+            nome,
+            cat,
+            t,
+            t_end,
+            list_mode,
+            max_pages,
+            stop_empty,
+            direction,
+            api_date_lower=t,
+            api_date_upper=t_end,
+        )
+        for k, d in part.items():
+            for kk, v in d.items():
+                merged[k][kk] += v
+        t = t_end
+
+    return merged
+
+
 def main() -> int:
     hours = float(os.getenv("DELIVERY_INSIGHTS_TS_HOURS", "72"))
     list_mode = (os.getenv("DELIVERY_INSIGHTS_TS_LIST_MODE") or "activity").strip().lower()
@@ -247,6 +334,7 @@ def main() -> int:
         direction = "outbound"
     write_csv = os.getenv("DELIVERY_INSIGHTS_TS_WRITE_CSV", "").strip().lower() in ("1", "true", "yes")
     pick = (os.getenv("TEST_INSIGHTS_TS_ACCOUNT") or "").strip().lower()
+    chunk_hours = float(os.getenv("DELIVERY_INSIGHTS_TS_CHUNK_HOURS", "4"))
 
     agora = utc_now()
     since_dt = agora - timedelta(hours=hours)
@@ -257,6 +345,7 @@ def main() -> int:
         f"- agora_utc: {extraido}\n"
         f"- profundidade: {hours:g} h\n"
         f"- list_mode={list_mode} direction={direction}\n"
+        f"- chunk_hours={chunk_hours:g} (0=sem fatias; >0 fatia a janela — MAX_PAGES por fatia)\n"
     )
 
     merged: dict[tuple[str, str, str], dict[str, int]] = {}
@@ -266,7 +355,7 @@ def main() -> int:
         if pick and pick not in acc["nome"].lower():
             continue
         try:
-            part = collect_timeseries_for_account(
+            part = collect_timeseries_for_account_window(
                 acc["sid"],
                 acc["token"],
                 acc["nome"],
@@ -277,6 +366,7 @@ def main() -> int:
                 max_pages,
                 stop_empty,
                 direction,
+                chunk_hours,
             )
         except Exception as e:
             print(f"**{acc['nome']}** ERRO: {e}\n")
