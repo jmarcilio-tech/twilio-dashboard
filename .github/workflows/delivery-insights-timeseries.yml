@@ -25,9 +25,10 @@ on:
 permissions:
   contents: write
 
+# Jobs longos (~ate 6h): nao cancelar run em curso quando chega cron ou novo dispatch — fila em vez disso.
 concurrency:
   group: twilio-delivery-insights-ts-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -90,7 +91,7 @@ jobs:
     needs: [timeseries]
     concurrency:
       group: twilio-delivery-insights-ts-commit-${{ github.ref }}
-      cancel-in-progress: true
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
