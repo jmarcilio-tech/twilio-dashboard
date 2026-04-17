@@ -19,6 +19,7 @@ Env:
   USAGE_UTC_DAY — se YYYY-MM-DD, forca StartDate=EndDate=esse dia (ignora USAGE_DATE_STRATEGY).
   USAGE_START_DATE + USAGE_END_DATE — se ambos YYYY-MM-DD, intervalo inclusivo GMT (ex. mes da Usage Summary);
       tem precedencia sobre USAGE_UTC_DAY e USAGE_DATE_STRATEGY; agrega todas as linhas por categoria.
+      Nesse modo os tres CSVs gravam-se em **month/** (nao sobrescrevem os ficheiros rolling na raiz do repo).
   TEST_USAGE_ACCOUNT — filtrar por nome (ex.: NS); vazio = todas com credenciais
   USAGE_WRITE_CSV — 1 grava conf_usage_billing_snapshot.csv, conf_usage_billing_by_category.csv e
       conf_usage_billing_daily.csv (serie diaria /Daily para visao geral).
@@ -503,25 +504,35 @@ def main():
     BY_CAT_FIELDS = ["Conta", "Categoria", "Count", "Usage", "Price_USD", "Range", "Extraido_Utc"]
     DAILY_FIELDS = ["Conta", "Data_Utc", "Categoria", "Count", "Usage", "Price_USD", "Range", "Extraido_Utc"]
     if write_csv and rows_out:
-        path = os.path.join(ROOT, "conf_usage_billing_snapshot.csv")
+        if fixed_range:
+            out_dir = os.path.join(ROOT, "month")
+            os.makedirs(out_dir, exist_ok=True)
+            dest_note = "month/ (intervalo fixo; coexiste com rolling na raiz)"
+        else:
+            out_dir = ROOT
+            dest_note = "raiz do repo"
+        path = os.path.join(out_dir, "conf_usage_billing_snapshot.csv")
         with open(path, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
             w.writeheader()
             w.writerows(rows_out)
-        print(f"CSV: {path}")
-        path_cat = os.path.join(ROOT, "conf_usage_billing_by_category.csv")
+        print(f"CSV ({dest_note}): {path}")
+        path_cat = os.path.join(out_dir, "conf_usage_billing_by_category.csv")
         with open(path_cat, "w", newline="", encoding="utf-8") as f:
             wc = csv.DictWriter(f, fieldnames=BY_CAT_FIELDS)
             wc.writeheader()
             wc.writerows(rows_by_cat)
-        print(f"CSV: {path_cat} ({len(rows_by_cat)} linhas)")
+        print(f"CSV ({dest_note}): {path_cat} ({len(rows_by_cat)} linhas)")
         if write_daily:
-            path_day = os.path.join(ROOT, "conf_usage_billing_daily.csv")
+            path_day = os.path.join(out_dir, "conf_usage_billing_daily.csv")
             with open(path_day, "w", newline="", encoding="utf-8") as f:
                 wd = csv.DictWriter(f, fieldnames=DAILY_FIELDS)
                 wd.writeheader()
                 wd.writerows(rows_daily)
-            print(f"CSV: {path_day} ({len(rows_daily)} linhas; Daily {daily_start_d}..{daily_end_d} GMT; cats={daily_cats})")
+            print(
+                f"CSV ({dest_note}): {path_day} ({len(rows_daily)} linhas; "
+                f"Daily {daily_start_d}..{daily_end_d} GMT; cats={daily_cats})"
+            )
 
     print(
         "---\n"

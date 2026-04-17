@@ -110,11 +110,14 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: usage-billing-csv
-          if-no-files-found: error
+          if-no-files-found: warn
           path: |
             conf_usage_billing_snapshot.csv
             conf_usage_billing_by_category.csv
             conf_usage_billing_daily.csv
+            month/conf_usage_billing_snapshot.csv
+            month/conf_usage_billing_by_category.csv
+            month/conf_usage_billing_daily.csv
 
   commitar-usage:
     runs-on: ubuntu-latest
@@ -131,14 +134,32 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          cp conf_usage_billing_snapshot.csv /tmp/conf_usage_billing_snapshot.csv
-          if [ -f conf_usage_billing_by_category.csv ]; then cp conf_usage_billing_by_category.csv /tmp/conf_usage_billing_by_category.csv; fi
-          if [ -f conf_usage_billing_daily.csv ]; then cp conf_usage_billing_daily.csv /tmp/conf_usage_billing_daily.csv; fi
+          mkdir -p /tmp/usage_restore
+          for f in conf_usage_billing_snapshot.csv conf_usage_billing_by_category.csv conf_usage_billing_daily.csv; do
+            if [ -f "$f" ]; then cp "$f" /tmp/usage_restore/; fi
+          done
+          if [ -f month/conf_usage_billing_snapshot.csv ]; then
+            mkdir -p /tmp/usage_restore/month
+            cp month/conf_usage_billing_*.csv /tmp/usage_restore/month/ 2>/dev/null || true
+          fi
           git fetch origin master
           git reset --hard origin/master
-          cp /tmp/conf_usage_billing_snapshot.csv conf_usage_billing_snapshot.csv
-          git add conf_usage_billing_snapshot.csv
-          if [ -f /tmp/conf_usage_billing_by_category.csv ]; then cp /tmp/conf_usage_billing_by_category.csv conf_usage_billing_by_category.csv && git add conf_usage_billing_by_category.csv; fi
-          if [ -f /tmp/conf_usage_billing_daily.csv ]; then cp /tmp/conf_usage_billing_daily.csv conf_usage_billing_daily.csv && git add conf_usage_billing_daily.csv; fi
+          if [ -f /tmp/usage_restore/conf_usage_billing_snapshot.csv ]; then
+            cp /tmp/usage_restore/conf_usage_billing_snapshot.csv conf_usage_billing_snapshot.csv
+            git add conf_usage_billing_snapshot.csv
+          fi
+          if [ -f /tmp/usage_restore/conf_usage_billing_by_category.csv ]; then
+            cp /tmp/usage_restore/conf_usage_billing_by_category.csv conf_usage_billing_by_category.csv
+            git add conf_usage_billing_by_category.csv
+          fi
+          if [ -f /tmp/usage_restore/conf_usage_billing_daily.csv ]; then
+            cp /tmp/usage_restore/conf_usage_billing_daily.csv conf_usage_billing_daily.csv
+            git add conf_usage_billing_daily.csv
+          fi
+          if [ -f /tmp/usage_restore/month/conf_usage_billing_snapshot.csv ]; then
+            mkdir -p month
+            cp /tmp/usage_restore/month/conf_usage_billing_*.csv month/
+            git add month/
+          fi
           git diff --staged --quiet || git commit -m "chore: billing usage snapshot Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push origin master

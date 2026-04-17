@@ -126,6 +126,7 @@
 | **Total Spend / SMS (~Last 24h Insights)** | `conf_usage_billing_snapshot.csv` | Default **rolling_24h_proxy** (Usage Daily + mistura por hora; ver coluna `Range`). **SMS_Usage** costuma aproximar “SMS Transactions” melhor que `SMS_Count`. Não misturar com delivery |
 | **Usage por categoria (tabela / hierarquia)** | `conf_usage_billing_by_category.csv` | Mesmo job que o snapshot; colunas `Conta`, `Categoria`, `Count`, `Usage`, `Price_USD`, `Range`, `Extraido_Utc`. Em `rolling_24h_proxy`, totais por categoria são soma API nos dias UTC da janela (pode diferir do blend do cartão `TotalPrice`). UI: `docs/lovable-usage-hybrid/` |
 | **Usage diário (gráficos / visão geral)** | `conf_usage_billing_daily.csv` | Endpoint `/Daily` por categoria (`totalprice`, `sms` por defeito); uma linha por `(Conta, dia, categoria)`. Intervalo = mesma janela GMT que o snapshot (ex. mês com `USAGE_START_DATE`/`USAGE_END_DATE` ou ~2 dias em `rolling_24h_proxy`). Limite `USAGE_DAILY_MAX_SPAN_DAYS` (default 366). |
+| **Usage mês civil (ficheiros estáveis)** | `month/conf_usage_billing_snapshot.csv` (+ by_category + daily) | Gravados **só** em runs com intervalo fixo (`billing_month` ou `usage_start_date`+`usage_end_date`). O cron rolling continua a atualizar só a **raiz**. Raw: `.../master/month/conf_usage_billing_snapshot.csv` |
 | **Saúde do pipeline** | `delivery_sync_state.json` | Metadados apenas (ex.: `last_run_utc`, `api_pages_by_account`) |
 
 **Regras de leitura**
