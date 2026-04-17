@@ -1,4 +1,5 @@
 # Séries 15 min UTC por mensagem (Insight 5) — alinha filtros da UI com Twilio sem snapshot fixo de 4h.
+# Uma job por conta (matrix) para reduzir tempo de parede; merge no fim.
 name: Delivery — Insights timeseries (15 min)
 
 on:
@@ -25,7 +26,7 @@ on:
 permissions:
   contents: write
 
-# Jobs longos (~ate 6h): nao cancelar run em curso quando chega cron ou novo dispatch — fila em vez disso.
+# Jobs longos: nao cancelar run em curso — fila.
 concurrency:
   group: twilio-delivery-insights-ts-${{ github.ref }}
   cancel-in-progress: false
@@ -44,6 +45,10 @@ jobs:
   timeseries:
     runs-on: ubuntu-latest
     timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        conta: [ns, joao, bernardo, rafa, havenmove, rehableaf, richard, naturemove]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -51,8 +56,10 @@ jobs:
           python-version: "3.11"
           cache: "pip"
       - run: pip install -r requirements.txt
-      - name: Insights timeseries → CSV
+      - name: Insights timeseries (conta ${{ matrix.conta }})
         env:
+          TEST_INSIGHTS_TS_ACCOUNT: ${{ matrix.conta }}
+          DELIVERY_INSIGHTS_TS_OUTPUT_PATH: parts/ts-${{ matrix.conta }}.csv
           RECUPERACAO_NS_SID: ${{ secrets.RECUPERACAO_NS_SID }}
           RECUPERACAO_NS_TOKEN: ${{ secrets.RECUPERACAO_NS_TOKEN }}
           BROADCAST_JOAO_SID: ${{ secrets.BROADCAST_JOAO_SID }}
@@ -71,6 +78,7 @@ jobs:
           STANDBY_NATUREMOVE_TOKEN: ${{ secrets.STANDBY_NATUREMOVE_TOKEN }}
         run: |
           export DELIVERY_INSIGHTS_TS_WRITE_CSV=1
+          mkdir -p parts
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             H="${{ github.event.inputs.ts_hours }}"
             LM="${{ github.event.inputs.list_mode }}"
@@ -82,13 +90,31 @@ jobs:
           python scripts/fetch_delivery_insights_timeseries.py
       - uses: actions/upload-artifact@v4
         with:
+          name: ts-part-${{ matrix.conta }}
+          if-no-files-found: warn
+          path: parts/ts-${{ matrix.conta }}.csv
+
+  merge-timeseries:
+    runs-on: ubuntu-latest
+    needs: [timeseries]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ts-part-*
+          path: artifacts
+          merge-multiple: true
+      - name: Juntar parciais
+        run: python scripts/merge_delivery_insights_timeseries.py artifacts
+      - uses: actions/upload-artifact@v4
+        with:
           name: delivery-insights-timeseries-csv
           if-no-files-found: warn
           path: conf_delivery_insights_timeseries.csv
 
   commitar-timeseries:
     runs-on: ubuntu-latest
-    needs: [timeseries]
+    needs: [merge-timeseries]
     concurrency:
       group: twilio-delivery-insights-ts-commit-${{ github.ref }}
       cancel-in-progress: false

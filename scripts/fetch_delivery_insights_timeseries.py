@@ -9,7 +9,8 @@ Env:
   DELIVERY_INSIGHTS_TS_LIST_MODE — activity (default) | sent
   DELIVERY_INSIGHTS_TS_MAX_PAGES — default 2500 (paginas Messages API em activity; ~2,5M msgs/conta/run — teto para contas ~2M na janela)
   DELIVERY_INSIGHTS_TS_STOP_EMPTY — default 8
-  DELIVERY_INSIGHTS_TS_WRITE_CSV — 1 grava conf_delivery_insights_timeseries.csv
+  DELIVERY_INSIGHTS_TS_OUTPUT_PATH — destino CSV (default conf_delivery_insights_timeseries.csv); usar em runs por conta (CI matrix).
+  DELIVERY_INSIGHTS_TS_WRITE_CSV — 1 grava CSV
   DELIVERY_DIRECTION — outbound (default) | all
   TEST_INSIGHTS_TS_ACCOUNT — filtrar por nome; vazio = todas
 
@@ -322,13 +323,26 @@ def main() -> int:
             }
         )
 
+    out_rel = (os.getenv("DELIVERY_INSIGHTS_TS_OUTPUT_PATH") or "conf_delivery_insights_timeseries.csv").strip()
+    path = out_rel if os.path.isabs(out_rel) else os.path.join(ROOT, out_rel)
+
     if write_csv and rows:
-        path = os.path.join(ROOT, "conf_delivery_insights_timeseries.csv")
+        _d = os.path.dirname(path)
+        if _d:
+            os.makedirs(_d, exist_ok=True)
         with open(path, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
             w.writeheader()
             w.writerows(rows)
         print(f"CSV: {path} ({len(rows)} linhas)")
+    elif write_csv and pick and not rows:
+        _d = os.path.dirname(path)
+        if _d:
+            os.makedirs(_d, exist_ok=True)
+        with open(path, "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+            w.writeheader()
+        print(f"CSV vazio (só cabeçalho): {path}")
     elif not rows:
         print("Nenhuma linha.")
     else:
