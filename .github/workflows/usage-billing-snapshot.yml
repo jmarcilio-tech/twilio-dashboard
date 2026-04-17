@@ -135,6 +135,9 @@ jobs:
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - uses: actions/download-artifact@v4
         with:
           name: usage-billing-csv
@@ -169,5 +172,7 @@ jobs:
             cp /tmp/usage_restore/month/conf_usage_billing_*.csv month/
             git add month/
           fi
+          python scripts/build_lovable_payloads.py
+          git add data/lovable/
           git diff --staged --quiet || git commit -m "chore: billing usage snapshot Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push origin master

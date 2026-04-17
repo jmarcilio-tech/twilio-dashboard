@@ -20,6 +20,21 @@ Este ficheiro é o **contrato único** para o layout em três separadores: cada 
 
 O Python do pipeline lê a mesma ordem a partir de `accounts_catalog.py` (um único sítio — evita desalinhamento com a Lovable).
 
+### Payloads JSON (recomendado — 1 URL por “pacote” lógico)
+
+Gerados por `scripts/build_lovable_payloads.py` (também após jobs que commitam CSVs e via workflow **Lovable — regenerar JSON**). Estrutura estável: `meta` (schema, dicas, contagem, truncagens) + dados por chave.
+
+| Ficheiro | Uso na Lovable | Raw (master) |
+|----------|----------------|--------------|
+| `data/lovable/billing.json` | Aba Billing: `rolling` (~24h) e `month` (mês UTC) com `org`, `accounts`, `by_category`, `daily` | `.../data/lovable/billing.json` |
+| `data/lovable/delivery.json` | Aba Delivery: `stats_quick`, `insights_4h`, `horario`, `insights_timeseries`, `history`, `pipeline_state` | `.../data/lovable/delivery.json` |
+| `data/lovable/finance.json` | Totais + detalhe: `total_marco`, `detalhado_marco` | `.../data/lovable/finance.json` |
+| `data/lovable/saldo.json` | Saldos: `accounts` (lista) | `.../data/lovable/saldo.json` |
+
+Base: `https://raw.githubusercontent.com/jmarcilio-tech/twilio-dashboard/master/`
+
+**KPI org (Billing):** `billing.json` → `rolling.org` ou `month.org` → campo **`TotalPrice_Totalprice`** (string decimal, igual ao CSV).
+
 ---
 
 ## Visão geral

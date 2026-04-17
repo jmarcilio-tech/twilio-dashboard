@@ -95,6 +95,9 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - uses: actions/download-artifact@v4
         with:
           name: csv-financeiro
@@ -118,5 +121,7 @@ jobs:
           cp /tmp/conf_saldos.csv conf_saldos.csv
           # Commita e faz push
           git add conf_total_marco.csv conf_detalhado_marco.csv conf_saldos.csv
+          python scripts/build_lovable_payloads.py
+          git add data/lovable/
           git diff --staged --quiet || git commit -m "chore: atualiza CSVs Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push origin master

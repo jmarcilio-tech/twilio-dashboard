@@ -131,6 +131,9 @@ jobs:
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - uses: actions/download-artifact@v4
         with:
           name: csv-delivery
@@ -148,5 +151,7 @@ jobs:
           if [ -f /tmp/delivery_sync_state.json ]; then cp /tmp/delivery_sync_state.json delivery_sync_state.json; fi
           git add conf_delivery_stats.csv conf_delivery_horario.csv
           if [ -f delivery_sync_state.json ]; then git add delivery_sync_state.json; fi
+          python scripts/build_lovable_payloads.py
+          git add data/lovable/
           git diff --staged --quiet || git commit -m "chore: atualiza CSVs Delivery Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push origin master

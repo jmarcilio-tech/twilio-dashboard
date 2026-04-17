@@ -1,0 +1,36 @@
+# Regenera data/lovable/*.json a partir dos CSVs no master (sem chamar Twilio).
+# Útil se quiseres alinhar JSON após merge manual ou enquanto outro workflow ainda não correu.
+name: Lovable — regenerar JSON (payloads)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "55 */6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lovable-payloads-json
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  payloads:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build Lovable JSON
+        run: python scripts/build_lovable_payloads.py
+      - name: Commitar se houver diferenças
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add data/lovable/
+          git diff --staged --quiet || git commit -m "chore: payloads Lovable JSON [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push origin master

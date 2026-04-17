@@ -48,7 +48,7 @@ A atualização dos dados é orquestrada via GitHub Actions com a seguinte polí
 | `conf_usage_billing_daily.csv` | Billing / Usage API | Série **diária** GMT (`Usage/Records/Daily`): `Conta`, `Data_Utc`, `Categoria`, `Count`, `Usage`, `Price_USD`, `Range`, `Extraido_Utc` — default categorias `totalprice` + `sms` (env `USAGE_DAILY_CATEGORIES`). |
 | `month/conf_usage_billing_*.csv` | Billing / Usage API | **Mesmo trio** de ficheiros quando o run usa `USAGE_START_DATE`+`USAGE_END_DATE` (ex. workflow `billing_month`). Não substitui os CSVs **rolling** na raiz; o toggle “Mês” na UI deve ler `month/`. |
 
-Instruções para consumidores (Lovable / BI): **layout em 3 abas isoladas** em **`docs/lovable-dashboard-3-abas.md`**; referência técnica completa e prompt longo em **`docs/pipeline-documentacao.md`** (secções 10 e 10.1). **Nomes e ordem das subcontas** (coluna `Conta` nos CSVs): `data/accounts_canonical.json` no repo — alinhar dropdowns na Lovable; o pipeline usa **`accounts_catalog.py`** como fonte única em Python.
+Instruções para consumidores (Lovable / BI): **layout em 3 abas isoladas** em **`docs/lovable-dashboard-3-abas.md`**; referência técnica completa e prompt longo em **`docs/pipeline-documentacao.md`** (secções 10 e 10.1). **Nomes e ordem das subcontas** (coluna `Conta` nos CSVs): `data/accounts_canonical.json` no repo — alinhar dropdowns na Lovable; o pipeline usa **`accounts_catalog.py`** como fonte única em Python. **JSON único por domínio (menos ambiguidade na UI):** `data/lovable/*.json`, gerados por **`scripts/build_lovable_payloads.py`** após atualização dos CSVs.
 
 ## 🛠️ Manutenção e Expansão
 
