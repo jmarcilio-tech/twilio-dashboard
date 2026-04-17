@@ -20,7 +20,7 @@ Env:
   USAGE_START_DATE + USAGE_END_DATE — se ambos YYYY-MM-DD, intervalo inclusivo GMT (ex. mes da Usage Summary);
       tem precedencia sobre USAGE_UTC_DAY e USAGE_DATE_STRATEGY; agrega todas as linhas por categoria.
   TEST_USAGE_ACCOUNT — filtrar por nome (ex.: NS); vazio = todas com credenciais
-  USAGE_WRITE_CSV — 1 grava conf_usage_billing_snapshot.csv na raiz do repo
+  USAGE_WRITE_CSV — 1 grava conf_usage_billing_snapshot.csv e conf_usage_billing_by_category.csv na raiz
 
 Saida: totalprice (categoria totalprice), sms (count/usage/price). Para "SMS Transactions" na consola,
   testar **count** primeiro, depois **usage** (segmentos), conforme o card.
@@ -168,8 +168,8 @@ def blended_headline_billing(sid: str, token: str, agora: datetime, hours: float
     }
 
 
-def summarize_aggregated(records: list[dict]) -> dict:
-    """Soma count/usage/price por categoria (correto para varios dias / muitas linhas na API)."""
+def aggregate_usage_records(records: list[dict]) -> dict[str, dict[str, float | int]]:
+    """Soma count/usage/price por categoria (Usage/Records)."""
     agg: dict[str, dict[str, float | int]] = defaultdict(lambda: {"count": 0, "usage": 0.0, "price": 0.0})
     for r in records:
         cat = (r.get("category") or "").strip()
@@ -179,6 +179,12 @@ def summarize_aggregated(records: list[dict]) -> dict:
         a["count"] = int(a["count"]) + parse_int(r.get("count"))  # type: ignore[operator]
         a["usage"] = float(a["usage"]) + parse_float(r.get("usage"))
         a["price"] = float(a["price"]) + parse_float(r.get("price"))
+    return dict(agg)
+
+
+def summarize_aggregated(records: list[dict]) -> dict:
+    """Agrega por categoria e devolve totais headline (sms, totalprice, etc.)."""
+    agg = aggregate_usage_records(records)
 
     tp = agg.get("totalprice") or {"count": 0, "usage": 0.0, "price": 0.0}
     sm = agg.get("sms") or {"count": 0, "usage": 0.0, "price": 0.0}
@@ -308,9 +314,12 @@ def main():
     print(f"# Usage Records (Billing API)\n- agora_utc: {agora.strftime('%Y-%m-%dT%H:%M:%SZ')}\n- {range_label}\n- {modo}\n")
 
     rows_out = []
+    rows_by_cat: list[dict] = []
     org_totalprice = 0.0
     org_sms_usage = 0
     org_sms_count = 0
+    extraido = agora.strftime("%Y-%m-%dT%H:%M:%SZ")
+
     for acc in accounts_from_env():
         if not acc["sid"] or not acc["token"]:
             continue
@@ -319,6 +328,15 @@ def main():
         try:
             if strategy == "rolling_24h_proxy" and not fixed_range:
                 s = blended_headline_billing(acc["sid"], acc["token"], agora, hours)
+                t0 = agora - timedelta(hours=hours)
+                start_d = t0.strftime("%Y-%m-%d")
+                end_d = agora.strftime("%Y-%m-%d")
+                recs = fetch_usage_records_url(
+                    acc["sid"],
+                    acc["token"],
+                    "",
+                    {"StartDate": start_d, "EndDate": end_d, "PageSize": 1000},
+                )
             else:
                 recs = fetch_usage_records_url(acc["sid"], acc["token"], path_suffix, dict(params))
                 s = summarize(recs)
@@ -338,6 +356,22 @@ def main():
             for cat, c, u, p in s["sms_sub_top"][:12]:
                 print(f"  - {cat}: count={c} usage={u} price={p:.4f}")
         print("")
+        agg = aggregate_usage_records(recs)
+        for cat in sorted(agg.keys(), key=lambda c: (-float(agg[c]["price"]), c)):
+            v = agg[cat]
+            u_raw = float(v["usage"])
+            u_out: int | float = int(round(u_raw)) if abs(u_raw - round(u_raw)) < 1e-9 else round(u_raw, 4)
+            rows_by_cat.append(
+                {
+                    "Conta": acc["nome"],
+                    "Categoria": cat,
+                    "Count": int(v["count"]),
+                    "Usage": u_out,
+                    "Price_USD": f"{float(v['price']):.6f}",
+                    "Range": range_label,
+                    "Extraido_Utc": extraido,
+                }
+            )
         rows_out.append(
             {
                 "Conta": acc["nome"],
@@ -348,7 +382,7 @@ def main():
                 "SMS_Price": f"{s['sms_price']:.6f}",
                 "Sum_Price_NoTotalprice": f"{s['sum_price_all_but_totalprice']:.6f}",
                 "SMS_Subcategories_Sample": "|".join(f"{c}:{cnt}" for c, cnt, _, __ in s["sms_sub_top"][:5]),
-                "Extraido_Utc": agora.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "Extraido_Utc": extraido,
             }
         )
 
@@ -368,7 +402,7 @@ def main():
                 "SMS_Price": "",
                 "Sum_Price_NoTotalprice": "",
                 "SMS_Subcategories_Sample": "",
-                "Extraido_Utc": agora.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "Extraido_Utc": extraido,
             }
         )
 
@@ -383,6 +417,7 @@ def main():
         "SMS_Subcategories_Sample",
         "Extraido_Utc",
     ]
+    BY_CAT_FIELDS = ["Conta", "Categoria", "Count", "Usage", "Price_USD", "Range", "Extraido_Utc"]
     if write_csv and rows_out:
         path = os.path.join(ROOT, "conf_usage_billing_snapshot.csv")
         with open(path, "w", newline="", encoding="utf-8") as f:
@@ -390,6 +425,12 @@ def main():
             w.writeheader()
             w.writerows(rows_out)
         print(f"CSV: {path}")
+        path_cat = os.path.join(ROOT, "conf_usage_billing_by_category.csv")
+        with open(path_cat, "w", newline="", encoding="utf-8") as f:
+            wc = csv.DictWriter(f, fieldnames=BY_CAT_FIELDS)
+            wc.writeheader()
+            wc.writerows(rows_by_cat)
+        print(f"CSV: {path_cat} ({len(rows_by_cat)} linhas)")
 
     print(
         "---\n"

@@ -6,8 +6,8 @@ Este documento liga o **pipeline** (`conf_usage_billing_snapshot.csv`) a uma **n
 
 ## Dados no GitHub (fonte única)
 
-- **Ficheiro:** `conf_usage_billing_snapshot.csv` no repo `jmarcilio-tech/twilio-dashboard`, branch `master`.
-- **Raw (exemplo):** `https://raw.githubusercontent.com/jmarcilio-tech/twilio-dashboard/master/conf_usage_billing_snapshot.csv`
+- **Ficheiros:** `conf_usage_billing_snapshot.csv` (resumo) e `conf_usage_billing_by_category.csv` (detalhe por categoria), branch `master`, repo `jmarcilio-tech/twilio-dashboard`.
+- **Raw:** `https://raw.githubusercontent.com/jmarcilio-tech/twilio-dashboard/master/conf_usage_billing_snapshot.csv` · `https://raw.githubusercontent.com/jmarcilio-tech/twilio-dashboard/master/conf_usage_billing_by_category.csv`
 - **Workflow:** `usage-billing-snapshot.yml` (gera o CSV com `USAGE_WRITE_CSV=1`).
 
 ### Colunas (cabeçalho)
@@ -23,6 +23,8 @@ Este documento liga o **pipeline** (`conf_usage_billing_snapshot.csv`) a uma **n
 | `Sum_Price_NoTotalprice` | Soma de `price` de todas as categorias exceto `totalprice` (diagnóstico) |
 | `SMS_Subcategories_Sample` | Amostra `categoria:count` das subcategorias `sms-*` |
 | `Extraido_Utc` | Momento da extração |
+
+**`conf_usage_billing_by_category.csv`:** `Conta`, `Categoria`, `Count`, `Usage`, `Price_USD`, `Range`, `Extraido_Utc` — ver parser e UI em `docs/lovable-usage-hybrid/`.
 
 **Regra de ouro na UI:** mostrar sempre o texto de **`Range`** junto aos números, para o utilizador saber se está a ver **~Last 24h** ou **mês civil GMT**.
 

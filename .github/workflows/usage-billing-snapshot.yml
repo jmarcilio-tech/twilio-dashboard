@@ -1,5 +1,5 @@
 # Snapshot Billing — default rolling_24h_proxy (Daily + blend horario ~Last 24h Insights; ver script).
-# Gera conf_usage_billing_snapshot.csv para o dashboard / Lovable.
+# Gera conf_usage_billing_snapshot.csv + conf_usage_billing_by_category.csv para o dashboard / Lovable.
 name: Billing — Usage snapshot (Twilio)
 
 on:
@@ -86,7 +86,9 @@ jobs:
         with:
           name: usage-billing-csv
           if-no-files-found: error
-          path: conf_usage_billing_snapshot.csv
+          path: |
+            conf_usage_billing_snapshot.csv
+            conf_usage_billing_by_category.csv
 
   commitar-usage:
     runs-on: ubuntu-latest
@@ -104,9 +106,11 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           cp conf_usage_billing_snapshot.csv /tmp/conf_usage_billing_snapshot.csv
+          if [ -f conf_usage_billing_by_category.csv ]; then cp conf_usage_billing_by_category.csv /tmp/conf_usage_billing_by_category.csv; fi
           git fetch origin master
           git reset --hard origin/master
           cp /tmp/conf_usage_billing_snapshot.csv conf_usage_billing_snapshot.csv
           git add conf_usage_billing_snapshot.csv
+          if [ -f /tmp/conf_usage_billing_by_category.csv ]; then cp /tmp/conf_usage_billing_by_category.csv conf_usage_billing_by_category.csv && git add conf_usage_billing_by_category.csv; fi
           git diff --staged --quiet || git commit -m "chore: billing usage snapshot Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push origin master
