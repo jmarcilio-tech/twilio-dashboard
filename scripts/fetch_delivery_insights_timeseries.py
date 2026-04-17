@@ -7,7 +7,7 @@ Agrupa Messages API (activity) por Slot_15min igual a conf_delivery_horario.csv.
 Env:
   DELIVERY_INSIGHTS_TS_HOURS — default 72 (profundidade a paginar para tras em UTC)
   DELIVERY_INSIGHTS_TS_LIST_MODE — activity (default) | sent
-  DELIVERY_INSIGHTS_TS_MAX_PAGES — default 1000 (paginas Messages API em activity; ~1M msgs/conta/run — subir se ainda subcontar vs Insights)
+  DELIVERY_INSIGHTS_TS_MAX_PAGES — default 2500 (paginas Messages API em activity; ~2,5M msgs/conta/run — teto para contas ~2M na janela)
   DELIVERY_INSIGHTS_TS_STOP_EMPTY — default 8
   DELIVERY_INSIGHTS_TS_WRITE_CSV — 1 grava conf_delivery_insights_timeseries.csv
   DELIVERY_DIRECTION — outbound (default) | all
@@ -239,7 +239,7 @@ def main() -> int:
     list_mode = (os.getenv("DELIVERY_INSIGHTS_TS_LIST_MODE") or "activity").strip().lower()
     if list_mode not in ("sent", "activity"):
         list_mode = "activity"
-    max_pages = int(os.getenv("DELIVERY_INSIGHTS_TS_MAX_PAGES", "1000"))
+    max_pages = int(os.getenv("DELIVERY_INSIGHTS_TS_MAX_PAGES", "2500"))
     stop_empty = int(os.getenv("DELIVERY_INSIGHTS_TS_STOP_EMPTY", "8"))
     direction = (os.getenv("DELIVERY_DIRECTION") or "outbound").strip().lower()
     if direction not in ("outbound", "all"):

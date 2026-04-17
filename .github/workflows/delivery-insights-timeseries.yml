@@ -17,6 +17,10 @@ on:
         options:
           - activity
           - sent
+      ts_max_pages:
+        description: "Teto de paginas Messages.json por conta (activity); ~1000 msgs/pagina. Default 2500 ~2,5M msgs"
+        type: string
+        default: "2500"
 
 permissions:
   contents: write
@@ -31,14 +35,14 @@ env:
   DELIVERY_INSIGHTS_TS_HOURS: "72"
   DELIVERY_INSIGHTS_TS_LIST_MODE: activity
   DELIVERY_DIRECTION: outbound
-  DELIVERY_INSIGHTS_TS_MAX_PAGES: "1000"
+  DELIVERY_INSIGHTS_TS_MAX_PAGES: "2500"
   DELIVERY_INSIGHTS_TS_STOP_EMPTY: "8"
   PYTHONUNBUFFERED: "1"
 
 jobs:
   timeseries:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -69,8 +73,10 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             H="${{ github.event.inputs.ts_hours }}"
             LM="${{ github.event.inputs.list_mode }}"
+            MP="${{ github.event.inputs.ts_max_pages }}"
             if [ -n "$H" ] && [ "$H" != "null" ]; then export DELIVERY_INSIGHTS_TS_HOURS="$H"; fi
             if [ -n "$LM" ] && [ "$LM" != "null" ]; then export DELIVERY_INSIGHTS_TS_LIST_MODE="$LM"; fi
+            if [ -n "$MP" ] && [ "$MP" != "null" ]; then export DELIVERY_INSIGHTS_TS_MAX_PAGES="$MP"; fi
           fi
           python scripts/fetch_delivery_insights_timeseries.py
       - uses: actions/upload-artifact@v4
