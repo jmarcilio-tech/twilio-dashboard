@@ -26,7 +26,7 @@
 | Delivery (rápido ~5 min) | `delivery_extractor.py` + `.github/workflows/delivery-only.yml` | `conf_delivery_stats.csv`, `conf_delivery_horario.csv`, `delivery_sync_state.json` |
 | Delivery (varredura diária) | mesmo script + `.github/workflows/delivery-sweep-daily.yml` | append a `conf_delivery_stats_history.csv` (não substitui o snapshot nem o horário) |
 | Delivery Insights (Past N h, consola) | `scripts/fetch_delivery_insights_snapshot.py` + `.github/workflows/delivery-insights-4h.yml` | `conf_delivery_insights_4h.csv` (mensagens + segmentos; `activity` + outbound) |
-| Billing / Usage API | `scripts/fetch_usage_billing_snapshot.py` + `.github/workflows/usage-billing-snapshot.yml` | `conf_usage_billing_snapshot.csv`, `conf_usage_billing_by_category.csv` |
+| Billing / Usage API | `scripts/fetch_usage_billing_snapshot.py` + `.github/workflows/usage-billing-snapshot.yml` | `conf_usage_billing_snapshot.csv`, `conf_usage_billing_by_category.csv`, `conf_usage_billing_daily.csv` |
 
 ---
 
@@ -72,7 +72,7 @@
 | Delivery varredura | `delivery-sweep-daily.yml` | `schedule`, `workflow_dispatch` | Janela `since_yesterday_utc`; append histórico; `DELIVERY_STATS_WRITE_SNAPSHOT=0` |
 | Delivery Insights 4h | `delivery-insights-4h.yml` | `schedule` (2×/h UTC), `workflow_dispatch` | Gera/commit `conf_delivery_insights_4h.csv`; inputs `insights_hours`, `list_mode` |
 | Delivery Insights timeseries | `delivery-insights-timeseries.yml` | `schedule` (2×/h UTC), `workflow_dispatch` | Gera/commit `conf_delivery_insights_timeseries.csv`; inputs `ts_hours`, `list_mode` |
-| Billing Usage | `usage-billing-snapshot.yml` | `schedule` (4×/dia UTC), `workflow_dispatch` | Gera/commit `conf_usage_billing_snapshot.csv` + `conf_usage_billing_by_category.csv`; estratégia de datas via inputs/env |
+| Billing Usage | `usage-billing-snapshot.yml` | `schedule` (4×/dia UTC), `workflow_dispatch` | Gera/commit snapshot + por categoria + **diário**; inputs opcionais `billing_month` (AAAA-MM), `usage_start_date` / `usage_end_date` (GMT) para mês ou intervalo |
 | Financeiro + Saldos | `main.yml` | `schedule`, `workflow_dispatch` | Frequência menor; não corre delivery |
 
 ---
@@ -125,6 +125,7 @@
 | **Série / tendência larga** (ontem 00:00 UTC → agora, append diário) | `conf_delivery_stats_history.csv` | Não apresentar como snapshot “agora”; cada linha é uma execução/janela gravada no histórico |
 | **Total Spend / SMS (~Last 24h Insights)** | `conf_usage_billing_snapshot.csv` | Default **rolling_24h_proxy** (Usage Daily + mistura por hora; ver coluna `Range`). **SMS_Usage** costuma aproximar “SMS Transactions” melhor que `SMS_Count`. Não misturar com delivery |
 | **Usage por categoria (tabela / hierarquia)** | `conf_usage_billing_by_category.csv` | Mesmo job que o snapshot; colunas `Conta`, `Categoria`, `Count`, `Usage`, `Price_USD`, `Range`, `Extraido_Utc`. Em `rolling_24h_proxy`, totais por categoria são soma API nos dias UTC da janela (pode diferir do blend do cartão `TotalPrice`). UI: `docs/lovable-usage-hybrid/` |
+| **Usage diário (gráficos / visão geral)** | `conf_usage_billing_daily.csv` | Endpoint `/Daily` por categoria (`totalprice`, `sms` por defeito); uma linha por `(Conta, dia, categoria)`. Intervalo = mesma janela GMT que o snapshot (ex. mês com `USAGE_START_DATE`/`USAGE_END_DATE` ou ~2 dias em `rolling_24h_proxy`). Limite `USAGE_DAILY_MAX_SPAN_DAYS` (default 366). |
 | **Saúde do pipeline** | `delivery_sync_state.json` | Metadados apenas (ex.: `last_run_utc`, `api_pages_by_account`) |
 
 **Regras de leitura**

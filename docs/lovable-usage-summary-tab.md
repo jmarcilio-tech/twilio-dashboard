@@ -26,6 +26,8 @@ Este documento liga o **pipeline** (`conf_usage_billing_snapshot.csv`) a uma **n
 
 **`conf_usage_billing_by_category.csv`:** `Conta`, `Categoria`, `Count`, `Usage`, `Price_USD`, `Range`, `Extraido_Utc` — ver parser e UI em `docs/lovable-usage-hybrid/`.
 
+**`conf_usage_billing_daily.csv`:** série diária GMT (`Data_Utc`) por conta e categoria (`totalprice`, `sms` por defeito) — ver `usage-billing-daily.ts` e workflow inputs `billing_month` / `usage_start_date`+`usage_end_date`.
+
 **Regra de ouro na UI:** mostrar sempre o texto de **`Range`** junto aos números, para o utilizador saber se está a ver **~Last 24h** ou **mês civil GMT**.
 
 ---

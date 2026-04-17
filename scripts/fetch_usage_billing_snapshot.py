@@ -20,7 +20,11 @@ Env:
   USAGE_START_DATE + USAGE_END_DATE — se ambos YYYY-MM-DD, intervalo inclusivo GMT (ex. mes da Usage Summary);
       tem precedencia sobre USAGE_UTC_DAY e USAGE_DATE_STRATEGY; agrega todas as linhas por categoria.
   TEST_USAGE_ACCOUNT — filtrar por nome (ex.: NS); vazio = todas com credenciais
-  USAGE_WRITE_CSV — 1 grava conf_usage_billing_snapshot.csv e conf_usage_billing_by_category.csv na raiz
+  USAGE_WRITE_CSV — 1 grava conf_usage_billing_snapshot.csv, conf_usage_billing_by_category.csv e
+      conf_usage_billing_daily.csv (serie diaria /Daily para visao geral).
+  USAGE_WRITE_DAILY_CSV — 0 desliga so o CSV diario (default: 1 quando USAGE_WRITE_CSV=1).
+  USAGE_DAILY_CATEGORIES — lista separada por virgulas (default: totalprice,sms) — categorias no endpoint Daily.
+  USAGE_DAILY_MAX_SPAN_DAYS — maximo de dias no intervalo diario (default 366) para evitar jobs enormes.
 
 Saida: totalprice (categoria totalprice), sms (count/usage/price). Para "SMS Transactions" na consola,
   testar **count** primeiro, depois **usage** (segmentos), conforme o card.
@@ -116,6 +120,19 @@ def overlap_hours_utc_day(t0: datetime, t1: datetime, day: datetime) -> float:
 def fetch_daily_category(sid: str, token: str, category: str, start_d: str, end_d: str) -> list[dict]:
     params = {"Category": category, "StartDate": start_d, "EndDate": end_d, "PageSize": 1000}
     return fetch_usage_records_url(sid, token, "/Daily", params)
+
+
+def clamp_date_range_gmt(start_d: str, end_d: str, max_days: int) -> tuple[str, str]:
+    """Encurta end_d se o intervalo exceder max_days (inclusivo)."""
+    a = datetime.strptime(start_d, "%Y-%m-%d").replace(tzinfo=timezone.utc).date()
+    b = datetime.strptime(end_d, "%Y-%m-%d").replace(tzinfo=timezone.utc).date()
+    if b < a:
+        return start_d, start_d
+    span = (b - a).days + 1
+    if span <= max_days:
+        return start_d, end_d
+    nb = a + timedelta(days=max_days - 1)
+    return start_d, nb.strftime("%Y-%m-%d")
 
 
 def blend_daily_metric(rows: list[dict], agora: datetime, hours: float, field: str) -> float:
@@ -257,6 +274,12 @@ def main():
     forced_day = (os.getenv("USAGE_UTC_DAY") or "").strip()
     pick = (os.getenv("TEST_USAGE_ACCOUNT") or "").strip().lower()
     write_csv = os.getenv("USAGE_WRITE_CSV", "").strip().lower() in ("1", "true", "yes")
+    write_daily = write_csv and os.getenv("USAGE_WRITE_DAILY_CSV", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+    daily_cats = [c.strip() for c in (os.getenv("USAGE_DAILY_CATEGORIES") or "totalprice,sms").split(",") if c.strip()]
     agora = utc_now()
     path_suffix = ""
     params: dict = {"PageSize": 1000}
@@ -305,6 +328,38 @@ def main():
         params["EndDate"] = end_d
         range_label = f"StartDate={start_d} EndDate={end_d} UTC (cover_days; se 2 dias, soma ate ~48h faturada)"
 
+    # Janela GMT YYYY-MM-DD para Usage/Records/Daily (graficos diarios — mesmo mes ou rolling).
+    if fixed_range:
+        daily_start_d, daily_end_d = start_e, end_e
+    elif forced_day:
+        daily_start_d, daily_end_d = forced_day, forced_day
+    elif strategy == "rolling_24h_proxy":
+        t0d = agora - timedelta(hours=hours)
+        daily_start_d, daily_end_d = t0d.strftime("%Y-%m-%d"), agora.strftime("%Y-%m-%d")
+    elif strategy == "today_subresource":
+        ud = agora.strftime("%Y-%m-%d")
+        daily_start_d, daily_end_d = ud, ud
+    elif strategy == "twilio_offsets":
+        daily_end_d = agora.strftime("%Y-%m-%d")
+        daily_start_d = (agora - timedelta(days=1)).strftime("%Y-%m-%d")
+    else:
+        sd0 = params.get("StartDate")
+        ed0 = params.get("EndDate")
+        if isinstance(sd0, str) and len(sd0) == 10 and sd0[:4].isdigit():
+            daily_start_d, daily_end_d = sd0, ed0 or agora.strftime("%Y-%m-%d")
+        else:
+            t0d = agora - timedelta(hours=hours)
+            daily_start_d, daily_end_d = t0d.strftime("%Y-%m-%d"), agora.strftime("%Y-%m-%d")
+
+    max_span = int(os.getenv("USAGE_DAILY_MAX_SPAN_DAYS", "366"))
+    d0, d1 = clamp_date_range_gmt(daily_start_d, daily_end_d, max_span)
+    if (d0, d1) != (daily_start_d, daily_end_d):
+        print(
+            f"INFO daily CSV: intervalo {daily_start_d}..{daily_end_d} encolhido para {d0}..{d1} "
+            f"(USAGE_DAILY_MAX_SPAN_DAYS={max_span})\n"
+        )
+        daily_start_d, daily_end_d = d0, d1
+
     if fixed_range:
         modo = f"USAGE_START_DATE={start_e} USAGE_END_DATE={end_e}"
     elif forced_day:
@@ -315,6 +370,7 @@ def main():
 
     rows_out = []
     rows_by_cat: list[dict] = []
+    rows_daily: list[dict] = []
     org_totalprice = 0.0
     org_sms_usage = 0
     org_sms_count = 0
@@ -385,6 +441,33 @@ def main():
                 "Extraido_Utc": extraido,
             }
         )
+        if write_daily:
+            for dcat in daily_cats:
+                try:
+                    drows = fetch_daily_category(acc["sid"], acc["token"], dcat, daily_start_d, daily_end_d)
+                except Exception as e:
+                    print(f"**{acc['nome']}** daily `{dcat}`: {e}\n")
+                    continue
+                for r in drows:
+                    day = (r.get("start_date") or "")[:10]
+                    if len(day) != 10:
+                        continue
+                    uraw = parse_float(r.get("usage"))
+                    u_day: int | float = (
+                        int(round(uraw)) if abs(uraw - round(uraw)) < 1e-9 else round(uraw, 4)
+                    )
+                    rows_daily.append(
+                        {
+                            "Conta": acc["nome"],
+                            "Data_Utc": day,
+                            "Categoria": dcat,
+                            "Count": parse_int(r.get("count")),
+                            "Usage": u_day,
+                            "Price_USD": f"{parse_float(r.get('price')):.6f}",
+                            "Range": range_label,
+                            "Extraido_Utc": extraido,
+                        }
+                    )
 
     if rows_out:
         print("## Soma todas as contas (aprox. vista master / org)")
@@ -418,6 +501,7 @@ def main():
         "Extraido_Utc",
     ]
     BY_CAT_FIELDS = ["Conta", "Categoria", "Count", "Usage", "Price_USD", "Range", "Extraido_Utc"]
+    DAILY_FIELDS = ["Conta", "Data_Utc", "Categoria", "Count", "Usage", "Price_USD", "Range", "Extraido_Utc"]
     if write_csv and rows_out:
         path = os.path.join(ROOT, "conf_usage_billing_snapshot.csv")
         with open(path, "w", newline="", encoding="utf-8") as f:
@@ -431,6 +515,13 @@ def main():
             wc.writeheader()
             wc.writerows(rows_by_cat)
         print(f"CSV: {path_cat} ({len(rows_by_cat)} linhas)")
+        if write_daily:
+            path_day = os.path.join(ROOT, "conf_usage_billing_daily.csv")
+            with open(path_day, "w", newline="", encoding="utf-8") as f:
+                wd = csv.DictWriter(f, fieldnames=DAILY_FIELDS)
+                wd.writeheader()
+                wd.writerows(rows_daily)
+            print(f"CSV: {path_day} ({len(rows_daily)} linhas; Daily {daily_start_d}..{daily_end_d} GMT; cats={daily_cats})")
 
     print(
         "---\n"

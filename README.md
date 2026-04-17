@@ -45,6 +45,7 @@ A atualização dos dados é orquestrada via GitHub Actions com a seguinte polí
 | `conf_delivery_stats_history.csv` | Messaging / append diário | Mesmo schema que stats; série longa (`delivery-sweep-daily.yml`). |
 | `conf_usage_billing_snapshot.csv` | Billing / Usage API | Default **rolling_24h_proxy** (~Account Insights Last 24h: Daily + blend por hora). Colunas `TotalPrice_Totalprice`, `SMS_Price`, `SMS_Count`, `SMS_Usage`; ver `Range`. |
 | `conf_usage_billing_by_category.csv` | Billing / Usage API | Uma linha por `(Conta, Categoria)` com `Count`, `Usage`, `Price_USD` (todas as categorias Twilio na mesma janela; ver `docs/lovable-usage-hybrid/`). |
+| `conf_usage_billing_daily.csv` | Billing / Usage API | Série **diária** GMT (`Usage/Records/Daily`): `Conta`, `Data_Utc`, `Categoria`, `Count`, `Usage`, `Price_USD`, `Range`, `Extraido_Utc` — default categorias `totalprice` + `sms` (env `USAGE_DAILY_CATEGORIES`). |
 
 Instruções para consumidores (Lovable / BI): **uma fonte por ecrã**, cabeçalhos CSV e prompt pronto a colar em **`docs/pipeline-documentacao.md`** (secções 10 e 10.1).
 

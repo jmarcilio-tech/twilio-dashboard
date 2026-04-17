@@ -1,5 +1,5 @@
 # Snapshot Billing — default rolling_24h_proxy (Daily + blend horario ~Last 24h Insights; ver script).
-# Gera conf_usage_billing_snapshot.csv + conf_usage_billing_by_category.csv para o dashboard / Lovable.
+# Gera conf_usage_billing_snapshot.csv, conf_usage_billing_by_category.csv e conf_usage_billing_daily.csv.
 name: Billing — Usage snapshot (Twilio)
 
 on:
@@ -23,6 +23,18 @@ on:
         description: "Opcional AAAA-MM-DD forca StartDate=EndDate (sobrepoe strategy se preenchido)"
         type: string
         default: ""
+      billing_month:
+        description: "Opcional AAAA-MM — mes civil UTC inteiro (USAGE_START_DATE/END_DATE); sobrepoe strategy"
+        type: string
+        default: ""
+      usage_start_date:
+        description: "Opcional inicio GMT AAAA-MM-DD (com usage_end_date; sobrepoe billing_month)"
+        type: string
+        default: ""
+      usage_end_date:
+        description: "Opcional fim GMT AAAA-MM-DD (com usage_start_date)"
+        type: string
+        default: ""
 
 permissions:
   contents: write
@@ -41,7 +53,7 @@ env:
 jobs:
   usage:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -74,11 +86,24 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             STRAT="${{ github.event.inputs.usage_date_strategy }}"
             DAY="${{ github.event.inputs.usage_utc_day }}"
+            MON="${{ github.event.inputs.billing_month }}"
+            US="${{ github.event.inputs.usage_start_date }}"
+            UE="${{ github.event.inputs.usage_end_date }}"
             if [ -n "$STRAT" ] && [ "$STRAT" != "null" ]; then
               export USAGE_DATE_STRATEGY="$STRAT"
             fi
             if [ -n "$DAY" ] && [ "$DAY" != "null" ]; then
               export USAGE_UTC_DAY="$DAY"
+            fi
+            if [ -n "$MON" ] && [ "$MON" != "null" ] && [ ${#MON} -ge 7 ]; then
+              Y=$(echo "$MON" | cut -c1-4)
+              M=$(echo "$MON" | cut -c6-7)
+              export USAGE_START_DATE="${Y}-${M}-01"
+              export USAGE_END_DATE=$(date -u -d "${Y}-${M}-01 +1 month -1 day" +%F)
+            fi
+            if [ -n "$US" ] && [ "$US" != "null" ] && [ -n "$UE" ] && [ "$UE" != "null" ]; then
+              export USAGE_START_DATE="$US"
+              export USAGE_END_DATE="$UE"
             fi
           fi
           python scripts/fetch_usage_billing_snapshot.py
@@ -89,6 +114,7 @@ jobs:
           path: |
             conf_usage_billing_snapshot.csv
             conf_usage_billing_by_category.csv
+            conf_usage_billing_daily.csv
 
   commitar-usage:
     runs-on: ubuntu-latest
@@ -107,10 +133,12 @@ jobs:
           git config --local user.name "github-actions[bot]"
           cp conf_usage_billing_snapshot.csv /tmp/conf_usage_billing_snapshot.csv
           if [ -f conf_usage_billing_by_category.csv ]; then cp conf_usage_billing_by_category.csv /tmp/conf_usage_billing_by_category.csv; fi
+          if [ -f conf_usage_billing_daily.csv ]; then cp conf_usage_billing_daily.csv /tmp/conf_usage_billing_daily.csv; fi
           git fetch origin master
           git reset --hard origin/master
           cp /tmp/conf_usage_billing_snapshot.csv conf_usage_billing_snapshot.csv
           git add conf_usage_billing_snapshot.csv
           if [ -f /tmp/conf_usage_billing_by_category.csv ]; then cp /tmp/conf_usage_billing_by_category.csv conf_usage_billing_by_category.csv && git add conf_usage_billing_by_category.csv; fi
+          if [ -f /tmp/conf_usage_billing_daily.csv ]; then cp /tmp/conf_usage_billing_daily.csv conf_usage_billing_daily.csv && git add conf_usage_billing_daily.csv; fi
           git diff --staged --quiet || git commit -m "chore: billing usage snapshot Twilio [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push origin master
