@@ -36,7 +36,7 @@ on:
         type: string
         default: ""
       usage_test_account:
-        description: "Opcional filtro por nome (ex. richard). Obrigatorio com billing_month ou usage_start/end — gera month/ so com essa conta (comparar consola)."
+        description: "Vazio = todas as contas com secrets. Se preencher (ex. richard), com billing_month ou usage_start/end gera month/ apenas para essa conta (debug vs consola)."
         type: string
         default: ""
 

@@ -73,7 +73,7 @@
 | Delivery varredura | `delivery-sweep-daily.yml` | `schedule`, `workflow_dispatch` | Janela `since_yesterday_utc`; append histórico; `DELIVERY_STATS_WRITE_SNAPSHOT=0` |
 | Delivery Insights 4h | `delivery-insights-4h.yml` | `schedule` (2×/h UTC), `workflow_dispatch` | Gera/commit `conf_delivery_insights_4h.csv`; inputs `insights_hours`, `list_mode` |
 | Delivery Insights timeseries | `delivery-insights-timeseries.yml` | `schedule` (2×/h UTC), `workflow_dispatch` | Gera/commit `conf_delivery_insights_timeseries.csv`; inputs `ts_hours`, `list_mode` |
-| Billing Usage | `usage-billing-snapshot.yml` | `schedule` (4×/dia UTC), `workflow_dispatch` | Gera/commit snapshot + por categoria + **diário**; inputs opcionais `billing_month` (AAAA-MM), `usage_start_date` / `usage_end_date` (GMT), `usage_test_account` (ex. `richard` — só com intervalo fixo; grava em `month/`) |
+| Billing Usage | `usage-billing-snapshot.yml` | `schedule` (4×/dia UTC), `workflow_dispatch` | Gera/commit snapshot + por categoria + **diário**; o **cron** só atualiza ficheiros na **raiz** (`~24h`). Para `month/`: *Run workflow* com `billing_month` (AAAA-MM) ou `usage_start_date`+`usage_end_date` — **deixar `usage_test_account` vazio** para as **8 contas**; se preencher (ex. `richard`), *month/* fica **só** com essa conta. |
 | Financeiro | `main.yml` | `schedule`, `workflow_dispatch` | Só `conf_total_marco.csv` / `conf_detalhado_marco.csv`; não corre delivery nem saldos |
 
 ---
