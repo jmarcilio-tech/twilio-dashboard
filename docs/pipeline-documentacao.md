@@ -3,6 +3,8 @@
 **Repositório:** `jmarcilio-tech/twilio-dashboard` (branch `master`)  
 **Última consolidação:** documento gerado para suporte a docs internos / Lovable.
 
+**Checklist para apresentação / acompanhamento:** [docs/Pipeline.md](./Pipeline.md)
+
 ---
 
 ## 1. Visão geral

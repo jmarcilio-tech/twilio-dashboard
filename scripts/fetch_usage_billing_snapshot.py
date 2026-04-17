@@ -17,6 +17,8 @@ Env:
       start_utc_day — so o dia UTC do inicio da janela.
       today_subresource — GET .../Usage/Records/Today.json.
   USAGE_UTC_DAY — se YYYY-MM-DD, forca StartDate=EndDate=esse dia (ignora USAGE_DATE_STRATEGY).
+  USAGE_START_DATE + USAGE_END_DATE — se ambos YYYY-MM-DD, intervalo inclusivo GMT (ex. mes da Usage Summary);
+      tem precedencia sobre USAGE_UTC_DAY e USAGE_DATE_STRATEGY; agrega todas as linhas por categoria.
   TEST_USAGE_ACCOUNT — filtrar por nome (ex.: NS); vazio = todas com credenciais
   USAGE_WRITE_CSV — 1 grava conf_usage_billing_snapshot.csv na raiz do repo
 
@@ -28,6 +30,7 @@ from __future__ import annotations
 import csv
 import os
 import sys
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 import requests
@@ -165,10 +168,54 @@ def blended_headline_billing(sid: str, token: str, agora: datetime, hours: float
     }
 
 
+def summarize_aggregated(records: list[dict]) -> dict:
+    """Soma count/usage/price por categoria (correto para varios dias / muitas linhas na API)."""
+    agg: dict[str, dict[str, float | int]] = defaultdict(lambda: {"count": 0, "usage": 0.0, "price": 0.0})
+    for r in records:
+        cat = (r.get("category") or "").strip()
+        if not cat:
+            continue
+        a = agg[cat]
+        a["count"] = int(a["count"]) + parse_int(r.get("count"))  # type: ignore[operator]
+        a["usage"] = float(a["usage"]) + parse_float(r.get("usage"))
+        a["price"] = float(a["price"]) + parse_float(r.get("price"))
+
+    tp = agg.get("totalprice") or {"count": 0, "usage": 0.0, "price": 0.0}
+    sm = agg.get("sms") or {"count": 0, "usage": 0.0, "price": 0.0}
+    all_price_except_total = 0.0
+    sms_sub: list[tuple[str, int, int, float]] = []
+    for cat, v in agg.items():
+        cl = cat.lower()
+        p = float(v["price"])
+        if cl == "totalprice":
+            continue
+        all_price_except_total += p
+        if cl.startswith("sms-") and cl != "sms":
+            sms_sub.append((cat, int(v["count"]), int(v["usage"]), p))
+    sms_sub.sort(key=lambda x: -x[1])
+    return {
+        "totalprice": float(tp["price"]),
+        "sms_count": int(sm["count"]),
+        "sms_usage": int(sm["usage"]),
+        "sms_price": float(sm["price"]),
+        "sum_price_all_but_totalprice": all_price_except_total,
+        "categories": len(agg),
+        "sms_sub_top": sms_sub[:12],
+    }
+
+
 def summarize(records: list[dict]) -> dict:
-    by_cat = {r.get("category", ""): r for r in records}
-    totalprice_rec = by_cat.get("totalprice") or {}
-    sms_rec = by_cat.get("sms") or {}
+    """Uma linha por categoria (ex. subresource Today); se houver duplicados, agrega."""
+    by_cat: dict[str, list[dict]] = defaultdict(list)
+    for r in records:
+        c = (r.get("category") or "").strip()
+        if c:
+            by_cat[c].append(r)
+    if any(len(v) > 1 for v in by_cat.values()):
+        return summarize_aggregated(records)
+    by_one = {k: v[0] for k, v in by_cat.items()}
+    totalprice_rec = by_one.get("totalprice") or {}
+    sms_rec = by_one.get("sms") or {}
     all_price_except_total = 0.0
     sms_sub = []
     for r in records:
@@ -207,8 +254,18 @@ def main():
     agora = utc_now()
     path_suffix = ""
     params: dict = {"PageSize": 1000}
+    start_e = (os.getenv("USAGE_START_DATE") or "").strip()
+    end_e = (os.getenv("USAGE_END_DATE") or "").strip()
+    fixed_range = len(start_e) == 10 and len(end_e) == 10 and start_e <= end_e
 
-    if forced_day:
+    if fixed_range:
+        params["StartDate"] = start_e
+        params["EndDate"] = end_e
+        range_label = (
+            f"StartDate={start_e} EndDate={end_e} UTC (USAGE_START_DATE/USAGE_END_DATE; "
+            "agregado por categoria — alinhar com Usage Summary desse intervalo)"
+        )
+    elif forced_day:
         params["StartDate"] = forced_day
         params["EndDate"] = forced_day
         range_label = f"StartDate=EndDate={forced_day} UTC (USAGE_UTC_DAY)"
@@ -242,7 +299,12 @@ def main():
         params["EndDate"] = end_d
         range_label = f"StartDate={start_d} EndDate={end_d} UTC (cover_days; se 2 dias, soma ate ~48h faturada)"
 
-    modo = f"USAGE_UTC_DAY={forced_day}" if forced_day else f"USAGE_DATE_STRATEGY={strategy}"
+    if fixed_range:
+        modo = f"USAGE_START_DATE={start_e} USAGE_END_DATE={end_e}"
+    elif forced_day:
+        modo = f"USAGE_UTC_DAY={forced_day}"
+    else:
+        modo = f"USAGE_DATE_STRATEGY={strategy}"
     print(f"# Usage Records (Billing API)\n- agora_utc: {agora.strftime('%Y-%m-%dT%H:%M:%SZ')}\n- {range_label}\n- {modo}\n")
 
     rows_out = []
@@ -255,7 +317,7 @@ def main():
         if pick and pick not in acc["nome"].lower():
             continue
         try:
-            if strategy == "rolling_24h_proxy":
+            if strategy == "rolling_24h_proxy" and not fixed_range:
                 s = blended_headline_billing(acc["sid"], acc["token"], agora, hours)
             else:
                 recs = fetch_usage_records_url(acc["sid"], acc["token"], path_suffix, dict(params))
