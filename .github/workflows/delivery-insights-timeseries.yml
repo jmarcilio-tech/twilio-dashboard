@@ -31,14 +31,14 @@ env:
   DELIVERY_INSIGHTS_TS_HOURS: "72"
   DELIVERY_INSIGHTS_TS_LIST_MODE: activity
   DELIVERY_DIRECTION: outbound
-  DELIVERY_INSIGHTS_TS_MAX_PAGES: "200"
+  DELIVERY_INSIGHTS_TS_MAX_PAGES: "1000"
   DELIVERY_INSIGHTS_TS_STOP_EMPTY: "8"
   PYTHONUNBUFFERED: "1"
 
 jobs:
   timeseries:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
