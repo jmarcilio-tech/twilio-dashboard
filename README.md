@@ -43,7 +43,7 @@ A atualização dos dados é orquestrada via GitHub Actions com a seguinte polí
 | `conf_delivery_insights_4h.csv` | Messaging / Insights consola | Past N h (default 4), `activity` + outbound; colunas `Insight_*` + `*_Seg` (`delivery-insights-4h.yml`). |
 | `conf_delivery_horario.csv` | Messaging / série 15 min UTC | Slots agregados; não substitui o snapshot para o mesmo “total” da consola. |
 | `conf_delivery_stats_history.csv` | Messaging / append diário | Mesmo schema que stats; série longa (`delivery-sweep-daily.yml`). |
-| `conf_usage_billing_snapshot.csv` | Billing / Usage API | Default **rolling_24h_proxy** (~Account Insights Last 24h: Daily + blend por hora). Colunas `TotalPrice_Totalprice`, `SMS_Price`, `SMS_Count`, `SMS_Usage`; ver `Range`. |
+| `conf_usage_billing_snapshot.csv` | Billing / Usage API | Default **`cover_days`** (soma dias UTC da janela ~24h; alinha melhor a **SMS Transactions** do Account Insights). Legado: `rolling_24h_proxy` (blend horário). Colunas `TotalPrice_Totalprice`, `SMS_Price`, `SMS_Count`, `SMS_Usage`; ver `Range`. |
 | `conf_usage_billing_by_category.csv` | Billing / Usage API | Uma linha por `(Conta, Categoria)` com `Count`, `Usage`, `Price_USD` (todas as categorias Twilio na mesma janela; ver `docs/lovable-usage-hybrid/`). |
 | `conf_usage_billing_daily.csv` | Billing / Usage API | Série **diária** GMT (`Usage/Records/Daily`): `Conta`, `Data_Utc`, `Categoria`, `Count`, `Usage`, `Price_USD`, `Range`, `Extraido_Utc` — default categorias `totalprice` + `sms` (env `USAGE_DAILY_CATEGORIES`). |
 | `month/conf_usage_billing_*.csv` | Billing / Usage API | **Mesmo trio** de ficheiros quando o run usa `USAGE_START_DATE`+`USAGE_END_DATE` (ex. workflow `billing_month`). Não substitui os CSVs **rolling** na raiz; o toggle “Mês” na UI deve ler `month/`. |
@@ -56,7 +56,7 @@ Para adicionar uma nova subconta ao monitoramento:
 
 1.  Insira as configurações de `sid`, `token`, `nome` e `categoria` no dicionário `accounts` dentro do script principal.
 2.  Configure os respectivos **Secrets** na interface do GitHub (`Settings > Secrets and variables > Actions`).
-3.  Mapeie as novas variáveis no arquivo `.github/workflows/main.yml`.
+3.  Mapeie as novas variáveis nos workflows que usam essa conta (ex.: `.github/workflows/main.yml`, `delivery-only.yml`, `saldo-only.yml`, `usage-billing-snapshot.yml`, conforme aplicável).
 
 ---
 *Mantido pela equipe de Engenharia / Data Ops.*

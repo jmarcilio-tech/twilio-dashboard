@@ -15,7 +15,7 @@ Este documento liga o **pipeline** (`conf_usage_billing_snapshot.csv`) a uma **n
 | Coluna | Significado |
 |--------|-------------|
 | `Conta` | Nome curto: NS, Joao, Bernardo, Rafa, Havenmove, Rehableaf, Richard, Naturemove, ou `__ORG_SUM__` (soma todas as contas) |
-| `Range` | Descrição da janela (ex. `rolling_24h_proxy` ~Last 24h, ou intervalo `USAGE_START_DATE` / `USAGE_END_DATE` para bater com **Usage Summary** do mês) |
+| `Range` | Descrição da janela (default **`cover_days`** ~Last 24h vs Insights SMS; legado `rolling_24h_proxy`; ou intervalo `USAGE_START_DATE` / `USAGE_END_DATE` para **Usage Summary** do mês) |
 | `TotalPrice_Totalprice` | USD — categoria `totalprice` da API (agregada na janela) |
 | `SMS_Count` | Contagem agregada categoria `sms` |
 | `SMS_Usage` | Uso agregado categoria `sms` (segmentos/unidade Twilio) |
@@ -64,6 +64,7 @@ UI:
   - SMS — transações: SMS_Count e SMS_Usage (mostrar os dois com legenda: count vs usage, conforme Twilio)
 - Bloco de texto secundário: Sum_Price_NoTotalprice e SMS_Subcategories_Sample (formato legível).
 - Sempre mostrar `Range` e `Extraido_Utc` visíveis (subtitle ou info) — são a "fonte da verdade" da janela temporal.
+- Banner ou callout visível no topo da guia: os valores são o instante da extração; se a consola Twilio foi consultada depois, contagens/preços podem ser superiores na consola (~alguns % em contas com volume) — não "corrigir" números no frontend sem nova fonte (seria inventar dados). Opções reais: aguardar próximo job, mostrar `Extraido_Utc`, ou disparar manualmente o workflow no GitHub.
 
 Comportamento:
 - Não chamar a API Twilio no browser; só CSV.
@@ -80,5 +81,5 @@ Opcional (se já existir filtro global de mês no app):
 
 - [ ] Todas as contas do CSV aparecem no seletor (8 contas).
 - [ ] `__ORG_SUM__` aparece como agregado global, não como "conta".
-- [ ] Valores batem com o CSV e, para a mesma janela, com a consola Twilio (tolerância explicada em `Range` para `rolling_24h_proxy`).
-- [ ] `Range` sempre visível.
+- [ ] Valores batem com o CSV; comparação com a consola Twilio só é válida para o mesmo intervalo (`Range`) e **depois** de confirmar que o `Extraido_Utc` do CSV não é anterior ao momento da captura na consola (senão diferenças de volume são esperadas).
+- [ ] `Range` e aviso temporal (`Extraido_Utc` / fonte GitHub) sempre visíveis.

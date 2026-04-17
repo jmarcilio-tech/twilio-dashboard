@@ -8,12 +8,12 @@ A consola "Last 24 hours" e uma janela rolante; este script cobre os dias civis 
 intersectam as ultimas N horas (pode diferir ligeiramente do card da consola).
 
 Env:
-  USAGE_SNAPSHOT_HOURS — default 24 (so usado em cover_days)
-  USAGE_DATE_STRATEGY (default: rolling_24h_proxy) —
-      rolling_24h_proxy — Usage/Records/Daily por categoria + mistura por hora na janela [agora-hours, agora] (~**Last 24h** Insights; pressupoe uso uniforme por hora em cada dia UTC).
+  USAGE_SNAPSHOT_HOURS — default 24 (largura da janela em horas: cover_days, rolling_24h_proxy, etc.)
+  USAGE_DATE_STRATEGY (default: cover_days) —
+      cover_days — dias civis UTC tocados por [agora-hours, agora]; soma **Usage/Records** desses dias (**1–2 dias**). Melhor alinhamento com **SMS Transactions** do Account Insights (~Last 24h) do que o blend.
+      rolling_24h_proxy — Daily + mistura por hora (subestima transacoes vs Insights; manter so se precisares do modelo antigo).
       end_utc_day — um dia civil UTC (subestima Last 24h na maior parte do dia).
-      twilio_offsets — StartDate=-1days EndDate=hoje (**soma dois dias GMT inteiros** — costuma **superar** Last 24h).
-      cover_days — dias UTC tocados pela janela (1–2 dias completos na API).
+      twilio_offsets — StartDate=-1days EndDate=hoje (**dois dias GMT inteiros** na API; semelhante a cover_days em muitos momentos).
       start_utc_day — so o dia UTC do inicio da janela.
       today_subresource — GET .../Usage/Records/Today.json.
   USAGE_UTC_DAY — se YYYY-MM-DD, forca StartDate=EndDate=esse dia (ignora USAGE_DATE_STRATEGY).
@@ -271,7 +271,7 @@ def summarize(records: list[dict]) -> dict:
 
 def main():
     hours = float(os.getenv("USAGE_SNAPSHOT_HOURS", "24"))
-    strategy = os.getenv("USAGE_DATE_STRATEGY", "rolling_24h_proxy").strip().lower()
+    strategy = os.getenv("USAGE_DATE_STRATEGY", "cover_days").strip().lower()
     forced_day = (os.getenv("USAGE_UTC_DAY") or "").strip()
     pick = (os.getenv("TEST_USAGE_ACCOUNT") or "").strip().lower()
     write_csv = os.getenv("USAGE_WRITE_CSV", "").strip().lower() in ("1", "true", "yes")
@@ -335,7 +335,10 @@ def main():
         end_d = agora.strftime("%Y-%m-%d")
         params["StartDate"] = start_d
         params["EndDate"] = end_d
-        range_label = f"StartDate={start_d} EndDate={end_d} UTC (cover_days; se 2 dias, soma ate ~48h faturada)"
+        range_label = (
+            f"StartDate={start_d} EndDate={end_d} UTC (cover_days; soma dias GMT tocados pela janela "
+            f"~{hours:g}h — alinhamento tipico a SMS Transactions / Insights Last 24h; totalprice pode diferir do cartao Total Spend)"
+        )
 
     # Janela GMT YYYY-MM-DD para Usage/Records/Daily (graficos diarios — mesmo mes ou rolling).
     if fixed_range:
