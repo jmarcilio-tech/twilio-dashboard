@@ -1,8 +1,11 @@
 Data,Conta,Categoria,Grupo_Gasto,Valor_USD
-2026-04-30,Richard,Standby,SMS: Envio/Recebimento,0.0332
-2026-04-30,Richard,Standby,Voz: Chamadas e Minutos,0.154
-2026-04-30,Richard,Standby,IA: Transcrição e Speech,0.091
-2026-04-30,Joao,Broadcast,Segurança: Lookups e Verify,0.0001
+2026-04-30,Richard,Standby,SMS: Envio/Recebimento,0.166
+2026-04-30,Richard,Standby,Voz: Chamadas e Minutos,0.0
+2026-04-30,Richard,Standby,IA: Transcrição e Speech,0.0
+2026-04-30,NS,Recuperação,Voz: Chamadas e Minutos,0.0958
+2026-04-30,NS,Recuperação,Voz: Gravações e Storage,0.01
+2026-04-30,NS,Recuperação,Segurança: Lookups e Verify,0.1056
+2026-04-30,Joao,Broadcast,Segurança: Lookups e Verify,0.0012
 2026-04-29,Richard,Standby,SMS: Envio/Recebimento,0.5247
 2026-04-29,Richard,Standby,Voz: Chamadas e Minutos,0.0
 2026-04-29,Richard,Standby,IA: Transcrição e Speech,0.0
