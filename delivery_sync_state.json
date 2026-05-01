@@ -1,20 +1,20 @@
 {
-  "last_run_utc": "2026-05-01T01:21:12Z",
-  "last_fetch_mode": "incremental",
-  "baseline_month": "2026-04",
-  "baseline_completed_at": "2026-04-15T22:05:44Z",
+  "last_run_utc": "2026-05-01T01:23:44Z",
+  "last_fetch_mode": "baseline_mes",
+  "baseline_month": "2026-05",
+  "baseline_completed_at": "2026-05-01T01:23:44Z",
   "delivery_direction": "outbound",
-  "delivery_list_mode": "activity",
+  "delivery_list_mode": "sent",
   "delivery_window_preset": "janela_horas",
   "api_pages_by_account": {
-    "NS": 6,
-    "Joao": 5,
-    "Bernardo": 5,
-    "Rafa": 5,
-    "Havenmove": 5,
+    "NS": 1,
+    "Joao": 1,
+    "Bernardo": 1,
+    "Rafa": 1,
+    "Havenmove": 1,
     "Rehableaf": 1,
-    "Richard": 5,
-    "Naturemove": 5
+    "Richard": 1,
+    "Naturemove": 1
   },
   "api_pages_capped_by_account": {}
 }
