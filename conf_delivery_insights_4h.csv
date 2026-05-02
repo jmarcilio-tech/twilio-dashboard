@@ -1,7 +1,8 @@
 Conta,Categoria,Insights_Hours,List_Mode,Direcao,Janela_Inicio_Utc,Janela_Fim_Utc,Insight_Delivered_Msgs,Insight_Failed_Msgs,Insight_Undelivered_Msgs,Insight_Sent_Msgs,Insight_Delivery_Unknown_Msgs,Insight_Total_Msgs,Mensagens,Segmentos,Delivered_Seg,Failed_Seg,Undelivered_Seg,Sent_Seg,Sending_Seg,Delivery_Unknown_Seg,Accepted_Seg,Queued_Seg,Api_Pages,Api_Pages_Capped,Github_Run_Id,Extraido_Utc
-Joao,Broadcast,4.0,activity,outbound,2026-05-02T13:06:34Z,2026-05-02T17:06:34Z,148,2,1,4,0,155,155,308,296,2,2,8,0,0,0,0,6,0,25257195605,2026-05-02T17:06:34Z
-Bernardo,Broadcast,4.0,activity,outbound,2026-05-02T13:06:34Z,2026-05-02T17:06:34Z,338,22,2,4,0,366,366,710,676,22,4,8,0,0,0,0,6,0,25257195605,2026-05-02T17:06:34Z
-Rafa,Broadcast,4.0,activity,outbound,2026-05-02T13:06:34Z,2026-05-02T17:06:34Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25257195605,2026-05-02T17:06:34Z
-Havenmove,Standby,4.0,activity,outbound,2026-05-02T13:06:34Z,2026-05-02T17:06:34Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25257195605,2026-05-02T17:06:34Z
-Rehableaf,Standby,4.0,activity,outbound,2026-05-02T13:06:34Z,2026-05-02T17:06:34Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,25257195605,2026-05-02T17:06:34Z
-Naturemove,Standby,4.0,activity,outbound,2026-05-02T13:06:34Z,2026-05-02T17:06:34Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25257195605,2026-05-02T17:06:34Z
+Joao,Broadcast,4.0,activity,outbound,2026-05-02T14:02:02Z,2026-05-02T18:02:02Z,370,23,4,11,0,408,408,793,740,23,8,22,0,0,0,0,6,0,25258298827,2026-05-02T18:02:02Z
+Bernardo,Broadcast,4.0,activity,outbound,2026-05-02T14:02:02Z,2026-05-02T18:02:02Z,355,23,3,4,0,385,385,747,710,23,6,8,0,0,0,0,6,0,25258298827,2026-05-02T18:02:02Z
+Rafa,Broadcast,4.0,activity,outbound,2026-05-02T14:02:02Z,2026-05-02T18:02:02Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25258298827,2026-05-02T18:02:02Z
+Havenmove,Standby,4.0,activity,outbound,2026-05-02T14:02:02Z,2026-05-02T18:02:02Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25258298827,2026-05-02T18:02:02Z
+Rehableaf,Standby,4.0,activity,outbound,2026-05-02T14:02:02Z,2026-05-02T18:02:02Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,25258298827,2026-05-02T18:02:02Z
+Richard,Standby,4.0,activity,outbound,2026-05-02T14:02:02Z,2026-05-02T18:02:02Z,94295,34224,12660,2916,0,144095,144095,145235,95114,34473,12708,2940,0,0,0,0,150,1,25258298827,2026-05-02T18:02:02Z
+Naturemove,Standby,4.0,activity,outbound,2026-05-02T14:02:02Z,2026-05-02T18:02:02Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25258298827,2026-05-02T18:02:02Z
