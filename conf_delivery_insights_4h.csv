@@ -1,8 +1,8 @@
 Conta,Categoria,Insights_Hours,List_Mode,Direcao,Janela_Inicio_Utc,Janela_Fim_Utc,Insight_Delivered_Msgs,Insight_Failed_Msgs,Insight_Undelivered_Msgs,Insight_Sent_Msgs,Insight_Delivery_Unknown_Msgs,Insight_Total_Msgs,Mensagens,Segmentos,Delivered_Seg,Failed_Seg,Undelivered_Seg,Sent_Seg,Sending_Seg,Delivery_Unknown_Seg,Accepted_Seg,Queued_Seg,Api_Pages,Api_Pages_Capped,Github_Run_Id,Extraido_Utc
-Joao,Broadcast,4.0,activity,outbound,2026-05-08T21:22:25Z,2026-05-09T01:22:25Z,1494,32,24,17,0,1567,1567,3103,2991,32,47,33,0,0,0,0,7,0,25587619491,2026-05-09T01:22:25Z
-Bernardo,Broadcast,4.0,activity,outbound,2026-05-08T21:22:25Z,2026-05-09T01:22:25Z,13,12,0,0,0,25,25,32,20,12,0,0,0,0,0,0,6,0,25587619491,2026-05-09T01:22:25Z
-Rafa,Broadcast,4.0,activity,outbound,2026-05-08T21:22:25Z,2026-05-09T01:22:25Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25587619491,2026-05-09T01:22:25Z
-Havenmove,Standby,4.0,activity,outbound,2026-05-08T21:22:25Z,2026-05-09T01:22:25Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25587619491,2026-05-09T01:22:25Z
-Rehableaf,Standby,4.0,activity,outbound,2026-05-08T21:22:25Z,2026-05-09T01:22:25Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,25587619491,2026-05-09T01:22:25Z
-Richard,Standby,4.0,activity,outbound,2026-05-08T21:22:25Z,2026-05-09T01:22:25Z,57815,6,1777,1161,0,60759,60759,60789,57845,6,1777,1161,0,0,0,0,115,0,25587619491,2026-05-09T01:22:25Z
-Naturemove,Standby,4.0,activity,outbound,2026-05-08T21:22:25Z,2026-05-09T01:22:25Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25587619491,2026-05-09T01:22:25Z
+Joao,Broadcast,4.0,activity,outbound,2026-05-09T00:55:28Z,2026-05-09T04:55:28Z,1177,32,21,21,0,1251,1251,2468,2353,32,41,42,0,0,0,0,7,0,25592235168,2026-05-09T04:55:28Z
+Bernardo,Broadcast,4.0,activity,outbound,2026-05-09T00:55:28Z,2026-05-09T04:55:28Z,8,17,0,0,0,25,25,30,13,17,0,0,0,0,0,0,6,0,25592235168,2026-05-09T04:55:28Z
+Rafa,Broadcast,4.0,activity,outbound,2026-05-09T00:55:28Z,2026-05-09T04:55:28Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25592235168,2026-05-09T04:55:28Z
+Havenmove,Standby,4.0,activity,outbound,2026-05-09T00:55:28Z,2026-05-09T04:55:28Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25592235168,2026-05-09T04:55:28Z
+Rehableaf,Standby,4.0,activity,outbound,2026-05-09T00:55:28Z,2026-05-09T04:55:28Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,25592235168,2026-05-09T04:55:28Z
+Richard,Standby,4.0,activity,outbound,2026-05-09T00:55:28Z,2026-05-09T04:55:28Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25592235168,2026-05-09T04:55:28Z
+Naturemove,Standby,4.0,activity,outbound,2026-05-09T00:55:28Z,2026-05-09T04:55:28Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25592235168,2026-05-09T04:55:28Z
