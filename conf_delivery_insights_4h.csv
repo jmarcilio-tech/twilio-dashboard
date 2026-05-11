@@ -1,7 +1,7 @@
 Conta,Categoria,Insights_Hours,List_Mode,Direcao,Janela_Inicio_Utc,Janela_Fim_Utc,Insight_Delivered_Msgs,Insight_Failed_Msgs,Insight_Undelivered_Msgs,Insight_Sent_Msgs,Insight_Delivery_Unknown_Msgs,Insight_Total_Msgs,Mensagens,Segmentos,Delivered_Seg,Failed_Seg,Undelivered_Seg,Sent_Seg,Sending_Seg,Delivery_Unknown_Seg,Accepted_Seg,Queued_Seg,Api_Pages,Api_Pages_Capped,Github_Run_Id,Extraido_Utc
-Joao,Broadcast,4.0,activity,outbound,2026-05-11T16:53:59Z,2026-05-11T20:53:59Z,1489,36,23,107,0,1655,1655,3127,2841,36,44,206,0,0,0,0,7,0,25696711966,2026-05-11T20:53:59Z
-Bernardo,Broadcast,4.0,activity,outbound,2026-05-11T16:53:59Z,2026-05-11T20:53:59Z,60,1,1,4,0,66,66,112,103,1,2,6,0,0,0,0,6,0,25696711966,2026-05-11T20:53:59Z
-Rafa,Broadcast,4.0,activity,outbound,2026-05-11T16:53:59Z,2026-05-11T20:53:59Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25696711966,2026-05-11T20:53:59Z
-Rehableaf,Standby,4.0,activity,outbound,2026-05-11T16:53:59Z,2026-05-11T20:53:59Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,25696711966,2026-05-11T20:53:59Z
-Richard,Standby,4.0,activity,outbound,2026-05-11T16:53:59Z,2026-05-11T20:53:59Z,126506,2169,6468,10315,0,145458,145458,145568,126603,2169,6472,10324,0,0,0,0,150,1,25696711966,2026-05-11T20:53:59Z
-Naturemove,Standby,4.0,activity,outbound,2026-05-11T16:53:59Z,2026-05-11T20:53:59Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25696711966,2026-05-11T20:53:59Z
+Joao,Broadcast,4.0,activity,outbound,2026-05-11T18:17:48Z,2026-05-11T22:17:48Z,1817,67,37,149,0,2070,2070,4337,3846,67,78,346,0,0,0,0,8,0,25700590358,2026-05-11T22:17:48Z
+Bernardo,Broadcast,4.0,activity,outbound,2026-05-11T18:17:48Z,2026-05-11T22:17:48Z,26,0,1,0,0,27,27,44,42,0,2,0,0,0,0,0,6,0,25700590358,2026-05-11T22:17:48Z
+Rafa,Broadcast,4.0,activity,outbound,2026-05-11T18:17:48Z,2026-05-11T22:17:48Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25700590358,2026-05-11T22:17:48Z
+Rehableaf,Standby,4.0,activity,outbound,2026-05-11T18:17:48Z,2026-05-11T22:17:48Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,25700590358,2026-05-11T22:17:48Z
+Richard,Standby,4.0,activity,outbound,2026-05-11T18:17:48Z,2026-05-11T22:17:48Z,125800,2063,6660,9571,0,144094,144094,144213,125908,2063,6664,9578,0,0,0,0,150,1,25700590358,2026-05-11T22:17:48Z
+Naturemove,Standby,4.0,activity,outbound,2026-05-11T18:17:48Z,2026-05-11T22:17:48Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,25700590358,2026-05-11T22:17:48Z
