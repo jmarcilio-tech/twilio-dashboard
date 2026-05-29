@@ -1,15 +1,15 @@
 Data,Conta,Categoria,Grupo_Gasto,Valor_USD
-2026-05-29,Richard,Standby,SMS: Envio/Recebimento,0.0478
-2026-05-29,Richard,Standby,Voz: Chamadas e Minutos,0.902
-2026-05-29,Richard,Standby,IA: Transcrição e Speech,0.507
+2026-05-29,Richard,Standby,SMS: Envio/Recebimento,0.1406
+2026-05-29,Richard,Standby,Voz: Chamadas e Minutos,0.0
+2026-05-29,Richard,Standby,IA: Transcrição e Speech,0.65
 2026-05-29,NS,Recuperação,Assinaturas: Números Fixos,0.0
 2026-05-29,Joao,Broadcast,SMS: Envio/Recebimento,0.006
-2026-05-29,Joao,Broadcast,Voz: Chamadas e Minutos,1.2338
+2026-05-29,Joao,Broadcast,Voz: Chamadas e Minutos,0.3978
 2026-05-29,Joao,Broadcast,Voz: Gravações e Storage,0.03
-2026-05-29,Joao,Broadcast,IA: Transcrição e Speech,0.468
+2026-05-29,Joao,Broadcast,IA: Transcrição e Speech,0.585
 2026-05-29,Joao,Broadcast,Segurança: Lookups e Verify,0.0
-2026-05-29,Havenmove,Standby,Voz: Chamadas e Minutos,0.066
-2026-05-29,Havenmove,Standby,IA: Transcrição e Speech,0.039
+2026-05-29,Havenmove,Standby,Voz: Chamadas e Minutos,0.264
+2026-05-29,Havenmove,Standby,IA: Transcrição e Speech,0.156
 2026-05-28,Richard,Standby,SMS: Envio/Recebimento,0.2872
 2026-05-28,Richard,Standby,Voz: Chamadas e Minutos,0.0
 2026-05-28,Richard,Standby,IA: Transcrição e Speech,0.0
@@ -340,7 +340,7 @@ Data,Conta,Categoria,Grupo_Gasto,Valor_USD
 2026-05-02,Richard,Standby,IA: Transcrição e Speech,0.0
 2026-05-02,Naturemove,Standby,Voz: Chamadas e Minutos,0.066
 2026-05-02,Naturemove,Standby,IA: Transcrição e Speech,0.039
-2026-05-02,NS,Recuperação,Segurança: Lookups e Verify,0.0001
+2026-05-02,NS,Recuperação,Segurança: Lookups e Verify,0.0
 2026-05-02,Joao,Broadcast,Voz: Chamadas e Minutos,0.308
 2026-05-02,Joao,Broadcast,IA: Transcrição e Speech,0.182
 2026-05-02,Joao,Broadcast,Segurança: Lookups e Verify,0.0015
@@ -356,7 +356,7 @@ Data,Conta,Categoria,Grupo_Gasto,Valor_USD
 2026-05-01,Naturemove,Standby,IA: Transcrição e Speech,0.078
 2026-05-01,NS,Recuperação,Voz: Chamadas e Minutos,0.22
 2026-05-01,NS,Recuperação,Voz: Gravações e Storage,0.4
-2026-05-01,NS,Recuperação,Segurança: Lookups e Verify,0.9108
+2026-05-01,NS,Recuperação,Segurança: Lookups e Verify,0.77
 2026-05-01,Joao,Broadcast,Voz: Chamadas e Minutos,0.11
 2026-05-01,Joao,Broadcast,IA: Transcrição e Speech,0.052
 2026-05-01,Joao,Broadcast,Segurança: Lookups e Verify,0.0036
