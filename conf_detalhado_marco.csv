@@ -1,11 +1,14 @@
 Data,Conta,Categoria,Grupo_Gasto,Valor_USD
 2026-05-29,Richard,Standby,SMS: Envio/Recebimento,0.0239
-2026-05-29,Richard,Standby,Voz: Chamadas e Minutos,0.55
-2026-05-29,Richard,Standby,IA: Transcrição e Speech,0.299
+2026-05-29,Richard,Standby,Voz: Chamadas e Minutos,0.594
+2026-05-29,Richard,Standby,IA: Transcrição e Speech,0.325
+2026-05-29,NS,Recuperação,Assinaturas: Números Fixos,0.0
 2026-05-29,Joao,Broadcast,SMS: Envio/Recebimento,0.003
-2026-05-29,Joao,Broadcast,Voz: Chamadas e Minutos,0.22
-2026-05-29,Joao,Broadcast,IA: Transcrição e Speech,0.13
-2026-05-29,Joao,Broadcast,Segurança: Lookups e Verify,0.972
+2026-05-29,Joao,Broadcast,Voz: Chamadas e Minutos,0.264
+2026-05-29,Joao,Broadcast,IA: Transcrição e Speech,0.156
+2026-05-29,Joao,Broadcast,Segurança: Lookups e Verify,0.0
+2026-05-29,Havenmove,Standby,Voz: Chamadas e Minutos,0.022
+2026-05-29,Havenmove,Standby,IA: Transcrição e Speech,0.013
 2026-05-28,Richard,Standby,SMS: Envio/Recebimento,0.2872
 2026-05-28,Richard,Standby,Voz: Chamadas e Minutos,0.0
 2026-05-28,Richard,Standby,IA: Transcrição e Speech,0.0
@@ -336,6 +339,7 @@ Data,Conta,Categoria,Grupo_Gasto,Valor_USD
 2026-05-02,Richard,Standby,IA: Transcrição e Speech,0.0
 2026-05-02,Naturemove,Standby,Voz: Chamadas e Minutos,0.066
 2026-05-02,Naturemove,Standby,IA: Transcrição e Speech,0.039
+2026-05-02,NS,Recuperação,Segurança: Lookups e Verify,0.0001
 2026-05-02,Joao,Broadcast,Voz: Chamadas e Minutos,0.308
 2026-05-02,Joao,Broadcast,IA: Transcrição e Speech,0.182
 2026-05-02,Joao,Broadcast,Segurança: Lookups e Verify,0.0015
@@ -349,6 +353,9 @@ Data,Conta,Categoria,Grupo_Gasto,Valor_USD
 2026-05-01,Rafa,Broadcast,IA: Transcrição e Speech,0.013
 2026-05-01,Naturemove,Standby,Voz: Chamadas e Minutos,0.132
 2026-05-01,Naturemove,Standby,IA: Transcrição e Speech,0.078
+2026-05-01,NS,Recuperação,Voz: Chamadas e Minutos,0.22
+2026-05-01,NS,Recuperação,Voz: Gravações e Storage,0.4
+2026-05-01,NS,Recuperação,Segurança: Lookups e Verify,0.9108
 2026-05-01,Joao,Broadcast,Voz: Chamadas e Minutos,0.11
 2026-05-01,Joao,Broadcast,IA: Transcrição e Speech,0.052
 2026-05-01,Joao,Broadcast,Segurança: Lookups e Verify,0.0036
