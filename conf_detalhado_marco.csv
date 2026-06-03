@@ -1,9 +1,14 @@
 Data,Conta,Categoria,Grupo_Gasto,Valor_USD
-2026-06-03,Richard,Standby,Voz: Chamadas e Minutos,0.506
-2026-06-03,Richard,Standby,IA: Transcrição e Speech,0.299
-2026-06-03,Joao,Broadcast,Voz: Chamadas e Minutos,0.176
-2026-06-03,Joao,Broadcast,IA: Transcrição e Speech,0.078
+2026-06-03,Richard,Standby,SMS: Envio/Recebimento,0.006
+2026-06-03,Richard,Standby,Voz: Chamadas e Minutos,0.0
+2026-06-03,Richard,Standby,IA: Transcrição e Speech,0.585
+2026-06-03,Rafa,Broadcast,SMS: Envio/Recebimento,0.112
+2026-06-03,NS,Recuperação,SMS: Envio/Recebimento,0.1198
+2026-06-03,Joao,Broadcast,Voz: Chamadas e Minutos,0.264
+2026-06-03,Joao,Broadcast,IA: Transcrição e Speech,0.13
 2026-06-03,Joao,Broadcast,Segurança: Lookups e Verify,0.0
+2026-06-03,Havenmove,Standby,Voz: Chamadas e Minutos,0.022
+2026-06-03,Havenmove,Standby,IA: Transcrição e Speech,0.013
 2026-06-02,Richard,Standby,SMS: Envio/Recebimento,0.3442
 2026-06-02,Richard,Standby,Voz: Chamadas e Minutos,0.0
 2026-06-02,Richard,Standby,IA: Transcrição e Speech,0.0
