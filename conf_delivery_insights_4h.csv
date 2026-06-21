@@ -1,9 +1,9 @@
 Conta,Categoria,Insights_Hours,List_Mode,Direcao,Janela_Inicio_Utc,Janela_Fim_Utc,Insight_Delivered_Msgs,Insight_Failed_Msgs,Insight_Undelivered_Msgs,Insight_Sent_Msgs,Insight_Delivery_Unknown_Msgs,Insight_Total_Msgs,Mensagens,Segmentos,Delivered_Seg,Failed_Seg,Undelivered_Seg,Sent_Seg,Sending_Seg,Delivery_Unknown_Seg,Accepted_Seg,Queued_Seg,Api_Pages,Api_Pages_Capped,Github_Run_Id,Extraido_Utc
-NS,Recuperação,4.0,activity,outbound,2026-06-21T03:06:08Z,2026-06-21T07:06:08Z,301,0,10,11,0,322,322,641,599,0,20,22,0,0,0,0,6,0,27896772384,2026-06-21T07:06:08Z
-Joao,Broadcast,4.0,activity,outbound,2026-06-21T03:06:08Z,2026-06-21T07:06:08Z,0,263,0,0,0,263,263,263,0,263,0,0,0,0,0,0,6,0,27896772384,2026-06-21T07:06:08Z
-Bernardo,Broadcast,4.0,activity,outbound,2026-06-21T03:06:08Z,2026-06-21T07:06:08Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,27896772384,2026-06-21T07:06:08Z
-Rafa,Broadcast,4.0,activity,outbound,2026-06-21T03:06:08Z,2026-06-21T07:06:08Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,27896772384,2026-06-21T07:06:08Z
-Havenmove,Standby,4.0,activity,outbound,2026-06-21T03:06:08Z,2026-06-21T07:06:08Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,27896772384,2026-06-21T07:06:08Z
-Rehableaf,Standby,4.0,activity,outbound,2026-06-21T03:06:08Z,2026-06-21T07:06:08Z,11,205,0,0,0,216,216,216,11,205,0,0,0,0,0,0,6,0,27896772384,2026-06-21T07:06:08Z
-Richard,Standby,4.0,activity,outbound,2026-06-21T03:06:08Z,2026-06-21T07:06:08Z,15,133,0,0,0,148,148,148,15,133,0,0,0,0,0,0,6,0,27896772384,2026-06-21T07:06:08Z
-Naturemove,Standby,4.0,activity,outbound,2026-06-21T03:06:08Z,2026-06-21T07:06:08Z,25,319,0,0,0,344,344,344,25,319,0,0,0,0,0,0,6,0,27896772384,2026-06-21T07:06:08Z
+NS,Recuperação,4.0,activity,outbound,2026-06-21T06:44:59Z,2026-06-21T10:44:59Z,322,0,13,6,0,341,341,683,645,0,26,12,0,0,0,0,6,0,27901833283,2026-06-21T10:44:59Z
+Joao,Broadcast,4.0,activity,outbound,2026-06-21T06:44:59Z,2026-06-21T10:44:59Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,27901833283,2026-06-21T10:44:59Z
+Bernardo,Broadcast,4.0,activity,outbound,2026-06-21T06:44:59Z,2026-06-21T10:44:59Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,27901833283,2026-06-21T10:44:59Z
+Rafa,Broadcast,4.0,activity,outbound,2026-06-21T06:44:59Z,2026-06-21T10:44:59Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,27901833283,2026-06-21T10:44:59Z
+Havenmove,Standby,4.0,activity,outbound,2026-06-21T06:44:59Z,2026-06-21T10:44:59Z,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,27901833283,2026-06-21T10:44:59Z
+Rehableaf,Standby,4.0,activity,outbound,2026-06-21T06:44:59Z,2026-06-21T10:44:59Z,6,69,0,0,0,75,75,75,6,69,0,0,0,0,0,0,6,0,27901833283,2026-06-21T10:44:59Z
+Richard,Standby,4.0,activity,outbound,2026-06-21T06:44:59Z,2026-06-21T10:44:59Z,9,43,0,0,0,52,52,52,9,43,0,0,0,0,0,0,6,0,27901833283,2026-06-21T10:44:59Z
+Naturemove,Standby,4.0,activity,outbound,2026-06-21T06:44:59Z,2026-06-21T10:44:59Z,7,127,0,0,0,134,134,134,7,127,0,0,0,0,0,0,6,0,27901833283,2026-06-21T10:44:59Z
