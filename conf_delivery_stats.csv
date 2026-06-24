@@ -1,9 +1,9 @@
 Conta,Categoria,Janela,Modo,Direcao,List_Mode,Mensagens,Segmentos,Delivered,Failed,Undelivered,Sent,Sending,Delivery_Unknown,Accepted,Queued,Taxa_Entrega_%,Insight_Delivered_Msgs,Insight_Failed_Msgs,Insight_Delivery_Unknown_Msgs,Insight_Undelivered_Msgs,Insight_Sent_Msgs,Insight_Total_Msgs,Api_Pages,Api_Pages_Capped,Agregado_Ate_Utc,Github_Run_Id,Extraido_Em
-Bernardo,Broadcast,4min,incremental,outbound,activity,7,7,1,6,0,0,0,0,0,0,14.29,1,6,0,0,0,7,6,0,2026-06-24T21:51:11Z,28131940925,2026-06-24 21:51 UTC
-Havenmove,Standby,4min,incremental,outbound,activity,0,0,0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,5,0,2026-06-24T21:51:11Z,28131940925,2026-06-24 21:51 UTC
-Joao,Broadcast,4min,incremental,outbound,activity,8161,8173,7660,54,196,262,0,0,0,1,93.72,7649,54,1,196,261,8161,14,0,2026-06-24T21:51:11Z,28131940925,2026-06-24 21:51 UTC
-NS,Recuperação,4min,incremental,outbound,activity,7,15,15,0,0,0,0,0,0,0,100.0,7,0,0,0,0,7,6,0,2026-06-24T21:51:11Z,28131940925,2026-06-24 21:51 UTC
-Naturemove,Standby,4min,incremental,outbound,activity,0,0,0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,5,0,2026-06-24T21:51:11Z,28131940925,2026-06-24 21:51 UTC
-Rafa,Broadcast,4min,incremental,outbound,activity,0,0,0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,5,0,2026-06-24T21:51:11Z,28131940925,2026-06-24 21:51 UTC
-Rehableaf,Standby,4min,incremental,outbound,activity,0,0,0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,5,0,2026-06-24T21:51:11Z,28131940925,2026-06-24 21:51 UTC
-Richard,Standby,4min,incremental,outbound,activity,71,71,4,67,0,0,0,0,0,0,5.63,4,67,0,0,0,71,6,0,2026-06-24T21:51:11Z,28131940925,2026-06-24 21:51 UTC
+Bernardo,Broadcast,4min,incremental,outbound,activity,5,5,0,5,0,0,0,0,0,0,0.0,0,5,0,0,0,5,6,0,2026-06-24T21:56:13Z,28132191825,2026-06-24 21:56 UTC
+Havenmove,Standby,4min,incremental,outbound,activity,0,0,0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,5,0,2026-06-24T21:56:13Z,28132191825,2026-06-24 21:56 UTC
+Joao,Broadcast,4min,incremental,outbound,activity,7347,7353,6909,57,183,204,0,0,0,0,93.96,6904,57,0,183,203,7347,13,0,2026-06-24T21:56:13Z,28132191825,2026-06-24 21:56 UTC
+NS,Recuperação,4min,incremental,outbound,activity,11,22,22,0,0,0,0,0,0,0,100.0,11,0,0,0,0,11,6,0,2026-06-24T21:56:13Z,28132191825,2026-06-24 21:56 UTC
+Naturemove,Standby,4min,incremental,outbound,activity,0,0,0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,5,0,2026-06-24T21:56:13Z,28132191825,2026-06-24 21:56 UTC
+Rafa,Broadcast,4min,incremental,outbound,activity,0,0,0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,5,0,2026-06-24T21:56:13Z,28132191825,2026-06-24 21:56 UTC
+Rehableaf,Standby,4min,incremental,outbound,activity,0,0,0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0,5,0,2026-06-24T21:56:13Z,28132191825,2026-06-24 21:56 UTC
+Richard,Standby,4min,incremental,outbound,activity,10007,10019,6335,294,219,320,1,0,0,2850,63.23,6323,294,2851,219,320,10007,16,0,2026-06-24T21:56:13Z,28132191825,2026-06-24 21:56 UTC
