@@ -1,5 +1,5 @@
 {
-  "last_run_utc": "2026-06-28T22:11:12Z",
+  "last_run_utc": "2026-06-28T22:16:15Z",
   "last_fetch_mode": "incremental",
   "baseline_month": "2026-06",
   "baseline_completed_at": "2026-06-01T02:04:29Z",
@@ -11,10 +11,12 @@
     "Joao": 5,
     "Bernardo": 6,
     "Rafa": 5,
-    "Havenmove": 72,
+    "Havenmove": 80,
     "Rehableaf": 5,
     "Richard": 6,
     "Naturemove": 5
   },
-  "api_pages_capped_by_account": {}
+  "api_pages_capped_by_account": {
+    "Havenmove": true
+  }
 }
