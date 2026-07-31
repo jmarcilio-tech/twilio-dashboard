@@ -1,15 +1,20 @@
 Data,Conta,Categoria,Grupo_Gasto,Valor_USD
-2026-07-31,Richard,Standby,Voz: Chamadas e Minutos,0.396
-2026-07-31,Richard,Standby,IA: Transcrição e Speech,0.221
+2026-07-31,Richard,Standby,Voz: Chamadas e Minutos,0.616
+2026-07-31,Richard,Standby,IA: Transcrição e Speech,0.351
 2026-07-31,Rafa,Broadcast,SMS: Envio/Recebimento,0.009
-2026-07-31,Rafa,Broadcast,Voz: Chamadas e Minutos,0.748
-2026-07-31,Rafa,Broadcast,IA: Transcrição e Speech,0.403
+2026-07-31,Rafa,Broadcast,Voz: Chamadas e Minutos,0.0
+2026-07-31,Rafa,Broadcast,IA: Transcrição e Speech,0.611
 2026-07-31,NS,Recuperação,SMS: Envio/Recebimento,0.5037
-2026-07-31,Joao,Broadcast,SMS: Envio/Recebimento,0.006
-2026-07-31,Joao,Broadcast,Voz: Chamadas e Minutos,0.244
+2026-07-31,NS,Recuperação,Voz: Chamadas e Minutos,0.2087
+2026-07-31,NS,Recuperação,Voz: Gravações e Storage,0.01
+2026-07-31,Joao,Broadcast,SMS: Envio/Recebimento,0.012
+2026-07-31,Joao,Broadcast,Voz: Chamadas e Minutos,0.3901
 2026-07-31,Joao,Broadcast,Voz: Gravações e Storage,0.0
-2026-07-31,Joao,Broadcast,IA: Transcrição e Speech,0.091
-2026-07-31,Joao,Broadcast,Segurança: Lookups e Verify,0.0
+2026-07-31,Joao,Broadcast,IA: Transcrição e Speech,0.117
+2026-07-31,Joao,Broadcast,Segurança: Lookups e Verify,0.0001
+2026-07-31,Havenmove,Standby,SMS: Envio/Recebimento,0.003
+2026-07-31,Havenmove,Standby,Voz: Chamadas e Minutos,0.022
+2026-07-31,Havenmove,Standby,IA: Transcrição e Speech,0.013
 2026-07-30,Richard,Standby,SMS: Envio/Recebimento,0.1196
 2026-07-30,Richard,Standby,Voz: Chamadas e Minutos,0.0001
 2026-07-30,Richard,Standby,IA: Transcrição e Speech,0.0
