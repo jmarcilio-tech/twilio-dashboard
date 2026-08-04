@@ -1,11 +1,28 @@
 Data,Conta,Categoria,Grupo_Gasto,Valor_USD
+2026-08-04,Richard,Standby,Voz: Chamadas e Minutos,0.044
+2026-08-04,Richard,Standby,IA: Transcrição e Speech,0.026
+2026-08-04,Rehableaf,Standby,Voz: Chamadas e Minutos,0.11
+2026-08-04,Rehableaf,Standby,IA: Transcrição e Speech,0.065
+2026-08-04,Rafa,Broadcast,SMS: Envio/Recebimento,0.23
+2026-08-04,Rafa,Broadcast,Voz: Chamadas e Minutos,0.198
+2026-08-04,Rafa,Broadcast,IA: Transcrição e Speech,0.104
+2026-08-04,Naturemove,Standby,Voz: Chamadas e Minutos,0.022
+2026-08-04,Naturemove,Standby,IA: Transcrição e Speech,0.013
+2026-08-04,Joao,Broadcast,SMS: Envio/Recebimento,0.0599
+2026-08-04,Joao,Broadcast,Voz: Chamadas e Minutos,0.8117
+2026-08-04,Joao,Broadcast,Voz: Gravações e Storage,0.37
+2026-08-04,Joao,Broadcast,IA: Transcrição e Speech,0.026
+2026-08-04,Joao,Broadcast,Segurança: Lookups e Verify,0.458
+2026-08-04,Havenmove,Standby,Voz: Chamadas e Minutos,0.022
+2026-08-04,Havenmove,Standby,IA: Transcrição e Speech,0.013
+2026-08-04,Bernardo,Broadcast,SMS: Envio/Recebimento,0.006
 2026-08-03,Richard,Standby,SMS: Envio/Recebimento,0.0718
 2026-08-03,Richard,Standby,Voz: Chamadas e Minutos,0.0
 2026-08-03,Richard,Standby,IA: Transcrição e Speech,0.0
-2026-08-03,Rehableaf,Standby,SMS: Envio/Recebimento,0.012
-2026-08-03,Rehableaf,Standby,Voz: Chamadas e Minutos,0.572
-2026-08-03,Rehableaf,Standby,IA: Transcrição e Speech,0.299
-2026-08-03,Rafa,Broadcast,SMS: Envio/Recebimento,0.1256
+2026-08-03,Rehableaf,Standby,SMS: Envio/Recebimento,0.0149
+2026-08-03,Rehableaf,Standby,Voz: Chamadas e Minutos,0.748
+2026-08-03,Rehableaf,Standby,IA: Transcrição e Speech,0.403
+2026-08-03,Rafa,Broadcast,SMS: Envio/Recebimento,0.1286
 2026-08-03,Rafa,Broadcast,Voz: Chamadas e Minutos,0.0
 2026-08-03,Rafa,Broadcast,IA: Transcrição e Speech,0.0
 2026-08-03,Naturemove,Standby,SMS: Envio/Recebimento,0.0149
@@ -15,7 +32,7 @@ Data,Conta,Categoria,Grupo_Gasto,Valor_USD
 2026-08-03,Joao,Broadcast,SMS: Envio/Recebimento,0.0867
 2026-08-03,Joao,Broadcast,Voz: Chamadas e Minutos,0.0002
 2026-08-03,Joao,Broadcast,Voz: Gravações e Storage,0.0001
-2026-08-03,Joao,Broadcast,IA: Transcrição e Speech,0.754
+2026-08-03,Joao,Broadcast,IA: Transcrição e Speech,0.78
 2026-08-03,Joao,Broadcast,Segurança: Lookups e Verify,0.0021
 2026-08-03,Havenmove,Standby,SMS: Envio/Recebimento,0.0179
 2026-08-03,Havenmove,Standby,Voz: Chamadas e Minutos,0.264
