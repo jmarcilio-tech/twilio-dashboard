@@ -1,15 +1,32 @@
 Data,Conta,Categoria,Grupo_Gasto,Valor_USD
-2026-09-11,NS,Recuperação,SMS: Envio/Recebimento,0.2396
-2026-09-11,NS,Recuperação,Voz: Chamadas e Minutos,0.1326
-2026-09-11,NS,Recuperação,Voz: Gravações e Storage,0.015
+2026-09-11,Rehableaf,Standby,SMS: Envio/Recebimento,0.003
+2026-09-11,Rehableaf,Standby,Voz: Chamadas e Minutos,0.022
+2026-09-11,Rehableaf,Standby,IA: Transcrição e Speech,0.013
+2026-09-11,Rafa,Broadcast,Voz: Chamadas e Minutos,0.044
+2026-09-11,Rafa,Broadcast,IA: Transcrição e Speech,0.026
+2026-09-11,Naturemove,Standby,Voz: Chamadas e Minutos,0.066
+2026-09-11,Naturemove,Standby,IA: Transcrição e Speech,0.039
+2026-09-11,NS,Recuperação,SMS: Envio/Recebimento,0.0004
+2026-09-11,NS,Recuperação,Voz: Chamadas e Minutos,0.0661
+2026-09-11,NS,Recuperação,Voz: Gravações e Storage,1.18
+2026-09-11,NS,Recuperação,IA: Transcrição e Speech,0.039
+2026-09-11,Joao,Broadcast,SMS: Envio/Recebimento,0.006
+2026-09-11,Joao,Broadcast,Voz: Chamadas e Minutos,1.0103
+2026-09-11,Joao,Broadcast,Voz: Gravações e Storage,0.48
+2026-09-11,Joao,Broadcast,IA: Transcrição e Speech,0.026
+2026-09-11,Joao,Broadcast,Segurança: Lookups e Verify,0.97
+2026-09-11,Havenmove,Standby,Voz: Chamadas e Minutos,0.066
+2026-09-11,Havenmove,Standby,IA: Transcrição e Speech,0.039
+2026-09-11,Bernardo,Broadcast,Voz: Chamadas e Minutos,0.154
+2026-09-11,Bernardo,Broadcast,IA: Transcrição e Speech,0.091
 2026-09-10,Richard,Standby,Voz: Chamadas e Minutos,0.132
 2026-09-10,Richard,Standby,IA: Transcrição e Speech,0.065
 2026-09-10,Rehableaf,Standby,SMS: Envio/Recebimento,0.006
 2026-09-10,Rehableaf,Standby,Voz: Chamadas e Minutos,0.308
 2026-09-10,Rehableaf,Standby,IA: Transcrição e Speech,0.143
 2026-09-10,Rafa,Broadcast,SMS: Envio/Recebimento,0.006
-2026-09-10,Rafa,Broadcast,Voz: Chamadas e Minutos,0.726
-2026-09-10,Rafa,Broadcast,IA: Transcrição e Speech,0.403
+2026-09-10,Rafa,Broadcast,Voz: Chamadas e Minutos,0.748
+2026-09-10,Rafa,Broadcast,IA: Transcrição e Speech,0.416
 2026-09-10,Naturemove,Standby,SMS: Envio/Recebimento,0.0508
 2026-09-10,Naturemove,Standby,Voz: Chamadas e Minutos,0.0
 2026-09-10,Naturemove,Standby,IA: Transcrição e Speech,0.0
@@ -19,14 +36,14 @@ Data,Conta,Categoria,Grupo_Gasto,Valor_USD
 2026-09-10,NS,Recuperação,IA: Transcrição e Speech,0.169
 2026-09-10,Joao,Broadcast,SMS: Envio/Recebimento,0.0419
 2026-09-10,Joao,Broadcast,Voz: Chamadas e Minutos,0.0
-2026-09-10,Joao,Broadcast,Voz: Gravações e Storage,1.195
+2026-09-10,Joao,Broadcast,Voz: Gravações e Storage,1.21
 2026-09-10,Joao,Broadcast,IA: Transcrição e Speech,0.845
 2026-09-10,Joao,Broadcast,Segurança: Lookups e Verify,0.0001
 2026-09-10,Havenmove,Standby,SMS: Envio/Recebimento,0.0329
 2026-09-10,Havenmove,Standby,Voz: Chamadas e Minutos,0.0
-2026-09-10,Havenmove,Standby,IA: Transcrição e Speech,0.884
+2026-09-10,Havenmove,Standby,IA: Transcrição e Speech,0.923
 2026-09-10,Bernardo,Broadcast,SMS: Envio/Recebimento,0.0269
-2026-09-10,Bernardo,Broadcast,Voz: Chamadas e Minutos,0.924
+2026-09-10,Bernardo,Broadcast,Voz: Chamadas e Minutos,0.946
 2026-09-10,Bernardo,Broadcast,IA: Transcrição e Speech,0.533
 2026-09-10,Bernardo,Broadcast,Assinaturas: Números Fixos,0.0
 2026-09-09,Richard,Standby,SMS: Envio/Recebimento,0.003
